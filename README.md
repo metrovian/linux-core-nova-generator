@@ -1,0 +1,1 @@
+# linux-core-nova-generator
