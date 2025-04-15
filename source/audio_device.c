@@ -1,0 +1,145 @@
+#include "audio_device.h"
+#include "predefined.h"
+
+extern int8_t audio_device_open(audio_device *audev, int8_t aumod)
+{
+	snd_pcm_hw_params_t *params;
+	
+	if (aumod == AUD_MODE_CAPTURE)
+	{
+		if (snd_pcm_open(&audev->handle, AUD_DEVICE_CAPTURE, aumod, 0) < 0)
+		{
+			DBG_WARN("failed to open audio capture device");
+			return -1;
+		}
+	}
+
+	else if (aumod == AUD_MODE_PLAYBACK)
+	{
+		if (snd_pcm_open(&audev->handle, AUD_DEVICE_PLAYBACK, aumod, 0) < 0)
+		{
+			DBG_WARN("failed to open audio playback device");
+			return -1;
+		}
+	}
+
+	else
+	{	
+		DBG_WARN("unknown audio device");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params_malloc(&params) < 0)
+	{
+		DBG_WARN("failed to allocate hardware parameters");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params_any(audev->handle, params) < 0)
+	{
+		DBG_WARN("failed to initialize hardware parameters");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params_set_access(audev->handle, params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0)
+	{
+		DBG_WARN("failed to set access type");
+		return -1;
+	}
+	
+	if (snd_pcm_hw_params_set_format(audev->handle, params, AUD_FORMAT) < 0)
+	{
+		DBG_WARN("failed to set format");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params_set_channels(audev->handle, params, AUD_CHANNELS) < 0)
+	{
+		DBG_WARN("failed to set channels");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params_set_rate(audev->handle, params, AUD_SAMPLE_RATE, 0) < 0)
+	{
+		DBG_WARN("failed to set sample rate");
+		return -1;
+	}
+
+	if (snd_pcm_hw_params(audev->handle, params) < 0)
+	{
+		DBG_WARN("failed to set hardware parameters");
+		return -1;
+	}
+
+	if (snd_pcm_prepare(audev->handle) < 0)
+	{
+		DBG_WARN("failed to prepare audio device");
+		return -1;
+	}
+
+	if (aumod == AUD_MODE_CAPTURE)
+	{
+		DBG_INFO("audio capture device open success");
+	}
+
+	else if (aumod == AUD_MODE_PLAYBACK)
+	{
+		DBG_INFO("audio playback device open success");
+	}
+
+	snd_pcm_hw_params_free(params);
+
+	return 0;
+}
+
+extern int8_t audio_device_close(audio_device *audev)
+{
+	snd_pcm_drain(audev->handle);
+	snd_pcm_close(audev->handle);
+
+	DBG_INFO("audio device close success");
+
+	return 0;
+}
+
+extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int32_t *read_frames)
+{
+	snd_pcm_sframes_t frames = snd_pcm_readi(audev->handle, auptr, AUD_BUFFER_FRAMES);
+
+	if (frames < 0)
+	{
+		frames = snd_pcm_recover(audev->handle, frames, 0);
+
+		if (frames < 0)
+		{
+			snd_pcm_prepare(audev->handle);
+
+			DBG_WARN("audio readout failed");
+			return -1;
+		}
+	}
+
+	*read_frames = frames * AUD_CHANNELS;
+
+	return 0;
+}
+
+extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int32_t *write_frames)
+{
+	snd_pcm_sframes_t frames = snd_pcm_writei(audev->handle, auptr, *write_frames);
+	
+	if (frames < 0)
+	{
+		frames = snd_pcm_recover(audev->handle, frames, 0);
+
+		if (frames < 0)
+		{
+			snd_pcm_prepare(audev->handle);
+
+			DBG_WARN("audio playback failed");
+			return -1;
+		}
+	}
+
+	return 0;
+}
