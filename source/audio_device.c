@@ -77,17 +77,19 @@ extern int8_t audio_device_open(audio_device *audev, int8_t aumod)
 		return -1;
 	}
 
+	snd_pcm_hw_params_free(params);
+
 	if (aumod == AUD_MODE_CAPTURE)
 	{
 		DBG_INFO("audio capture device open success");
+		return 0;
 	}
 
 	else if (aumod == AUD_MODE_PLAYBACK)
 	{
 		DBG_INFO("audio playback device open success");
+		return 0;
 	}
-
-	snd_pcm_hw_params_free(params);
 
 	return 0;
 }
@@ -98,7 +100,6 @@ extern int8_t audio_device_close(audio_device *audev)
 	snd_pcm_close(audev->handle);
 
 	DBG_INFO("audio device close success");
-
 	return 0;
 }
 
@@ -121,6 +122,7 @@ extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int3
 
 	*read_frames = frames * AUD_CHANNELS;
 
+	DBG_INFO("%d frames read success", *read_frames);
 	return 0;
 }
 
@@ -141,5 +143,6 @@ extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int
 		}
 	}
 
+	DBG_INFO("%d frames write success", *write_frames);
 	return 0;
 }
