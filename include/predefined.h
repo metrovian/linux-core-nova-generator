@@ -5,5 +5,5 @@
 #define INFO "\033[32m"
 #define RESET "\033[0m"
 
-#define DBG_WARN(message) fprintf(stderr, WARN "[%s:%d] " RESET "%s\n", __FILE__, __LINE__, message)
-#define DBG_INFO(message) fprintf(stderr, INFO "[%s:%d] " RESET "%s\n", __FILE__, __LINE__, message)
+#define DBG_WARN(message, ...) fprintf(stderr, WARN "[%s:%d] " RESET message "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define DBG_INFO(message, ...) fprintf(stderr, INFO "[%s:%d] " RESET message "\n", __FILE__, __LINE__, ##__VA_ARGS__)
