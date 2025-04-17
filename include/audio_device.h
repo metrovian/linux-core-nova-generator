@@ -1,15 +1,6 @@
 #pragma once
 #include <alsa/asoundlib.h>
 
-#define AUD_DEVICE_CAPTURE	"default"
-#define AUD_DEVICE_PLAYBACK	"default"
-
-#define AUD_BUFFER_FRAMES	44100
-
-#define AUD_FORMAT		SND_PCM_FORMAT_S16_LE
-#define AUD_MODE_CAPTURE	SND_PCM_STREAM_CAPTURE
-#define AUD_MODE_PLAYBACK	SND_PCM_STREAM_PLAYBACK
-
 typedef struct
 {
 	snd_pcm_t *handle;
