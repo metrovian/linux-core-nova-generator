@@ -134,7 +134,16 @@ extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int3
 
 extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int32_t *write_frames)
 {
-	snd_pcm_sframes_t frames = snd_pcm_writei(audev->handle, auptr, *write_frames);
+	int32_t channels = 1;	
+	int32_t error = snd_pcm_hw_params_get_channels(audev->params, &channels);
+
+	if (error < 0)
+	{
+		DBG_WARN("failed to get channels");
+		return -1;
+	}
+
+	snd_pcm_sframes_t frames = snd_pcm_writei(audev->handle, auptr, *write_frames / channels);
 	
 	if (frames < 0)
 	{
