@@ -53,16 +53,16 @@ extern void audio_queue_destroy(audio_queue *auque)
 	return;
 }
 
-extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_frames)
+extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_samples)
 {
 	pthread_mutex_lock(&auque->mutex);
 
-	while (auque->capacity < auque->size + *push_frames)
+	while (auque->capacity < auque->size + *push_samples)
 	{
 		pthread_cond_wait(&auque->push_available, &auque->mutex);
 	}
 	
-	for (int32_t i = 0; i < *push_frames; ++i)
+	for (int32_t i = 0; i < *push_samples; ++i)
 	{
 		auque->data[auque->back] = auptr[i];
 
@@ -76,16 +76,16 @@ extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_f
 	return;
 }
 
-extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_frames)
+extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_samples)
 {
 	pthread_mutex_lock(&auque->mutex);
 
-	while (auque->size < *pop_frames)
+	while (auque->size < *pop_samples)
 	{
 		pthread_cond_wait(&auque->pop_available, &auque->mutex);
 	}
 
-	for (int32_t i = 0; i < *pop_frames; ++i)
+	for (int32_t i = 0; i < *pop_samples; ++i)
 	{
 		auptr[i] = auque->data[auque->front];
 

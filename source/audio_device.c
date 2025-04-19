@@ -100,19 +100,19 @@ extern int8_t audio_device_close(audio_device *audev)
 	return 0;
 }
 
-extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int32_t *read_frames)
+extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int32_t *read_samples)
 {
 	snd_pcm_sframes_t frames = snd_pcm_readi(audev->handle, auptr, AUD_BUFFER_FRAMES);
 	
 	if (frames < 0)
 	{
-		frames = snd_pcm_recover(audev->handle, frames, 0);
+		frames = snd_pcm_recover(audev->handle, frames, 1);
 
 		if (frames < 0)
 		{
 			snd_pcm_prepare(audev->handle);
 
-			DBG_WARN("audio readout failed");
+			DBG_WARN("audio capture failed");
 			return -1;
 		}
 	}
@@ -126,13 +126,12 @@ extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int3
 		return -1;
 	}
 
-	*read_frames = frames * channels;
+	*read_samples = frames * channels;
 
-	DBG_INFO("%d frames read success", *read_frames);
 	return 0;
 }
 
-extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int32_t *write_frames)
+extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int32_t *write_samples)
 {
 	int32_t channels = 1;	
 	int32_t error = snd_pcm_hw_params_get_channels(audev->params, &channels);
@@ -143,11 +142,11 @@ extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int
 		return -1;
 	}
 
-	snd_pcm_sframes_t frames = snd_pcm_writei(audev->handle, auptr, *write_frames / channels);
+	snd_pcm_sframes_t frames = snd_pcm_writei(audev->handle, auptr, *write_samples / channels);
 	
 	if (frames < 0)
 	{
-		frames = snd_pcm_recover(audev->handle, frames, 0);
+		frames = snd_pcm_recover(audev->handle, frames, 1);
 
 		if (frames < 0)
 		{
@@ -158,6 +157,5 @@ extern int8_t audio_device_write_frames(audio_device *audev, int16_t *auptr, int
 		}
 	}
 
-	DBG_INFO("%d frames write success", *write_frames);
 	return 0;
 }
