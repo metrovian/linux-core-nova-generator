@@ -68,16 +68,16 @@ extern void codec_queue_destroy(codec_queue *coque)
 	return;
 }
 
-extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_packets)
+extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_payloads)
 {
 	pthread_mutex_lock(&coque->mutex);
 
-	while (coque->capacity < coque->size_packets + *push_packets)
+	while (coque->capacity < coque->size + *push_payloads)
 	{
 		pthread_cond_wait(&coque->push_available, &coque->mutex);
 	}
 	
-	for (int32_t i = 0; i < *push_packets; ++i)
+	for (int32_t i = 0; i < *push_payloads; ++i)
 	{
 		coque->data[coque->back] = coptr[i];
 
@@ -85,7 +85,7 @@ extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_pa
 		coque->size = (coque->size + 1);
 	}
 	
-	coque->packets[coque->back_packets] = *push_packets;
+	coque->packets[coque->back_packets] = *push_payloads;
 
 	coque->back_packets = (coque->back_packets + 1) % coque->capacity;
 	coque->size_packets = (coque->size_packets + 1);
@@ -96,7 +96,7 @@ extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_pa
 	return;
 }
 
-extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_packets)
+extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_payloads)
 {
 	pthread_mutex_lock(&coque->mutex);
 
@@ -105,12 +105,12 @@ extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_pack
 		pthread_cond_wait(&coque->pop_available, &coque->mutex);
 	}
 
-	*pop_packets = coque->packets[coque->front_packets];
+	*pop_payloads = coque->packets[coque->front_packets];
 
 	coque->front_packets = (coque->front_packets + 1) % coque->capacity;
 	coque->size_packets = (coque->size_packets - 1);
 
-	for (int32_t i = 0; i < *pop_packets; ++i)
+	for (int32_t i = 0; i < *pop_payloads; ++i)
 	{
 		coptr[i] = coque->data[coque->front];
 
