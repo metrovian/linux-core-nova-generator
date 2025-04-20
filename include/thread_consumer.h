@@ -1,3 +1,4 @@
+#pragma once
 #include "audio_device.h"
 #include "audio_queue.h"
 #include "codec_opus.h"
