@@ -11,7 +11,7 @@ extern void *thread_producer_raw(void *argument)
 {
 	if (g_thread_producer != PRODUCER_NONE)
 	{
-		DBG_WARN("failed to start raw producer");
+		DBG_WARN("failed to start raw producer thread");
 		return NULL;
 	}
 
@@ -30,7 +30,6 @@ extern void *thread_producer_raw(void *argument)
 		return NULL;
 	}
 
-	g_thread_producer = PRODUCER_RAW;
 	g_audio_queue = audio_queue_create(MAX_Q_CAPACITY_AUDIO);
 
 	if (!g_audio_queue)
@@ -41,6 +40,8 @@ extern void *thread_producer_raw(void *argument)
 		DBG_WARN("raw producer thread terminated");
 		return NULL;
 	}
+	
+	g_thread_producer = PRODUCER_RAW;
 	
 	while (g_thread_producer)
 	{
@@ -61,7 +62,7 @@ extern void *thread_producer_opus(void *argument)
 {
 	if (g_thread_producer != PRODUCER_NONE)
 	{
-		DBG_WARN("failed to start opus producer");
+		DBG_WARN("failed to start opus producer thread");
 		return NULL;
 	}
 
@@ -96,7 +97,6 @@ extern void *thread_producer_opus(void *argument)
 		return NULL;
 	}
 	
-	g_thread_producer = PRODUCER_OPUS;
 	g_codec_queue = codec_queue_create(MAX_Q_CAPACITY_CODEC);
 
 	if (!g_codec_queue)
@@ -110,6 +110,8 @@ extern void *thread_producer_opus(void *argument)
 		return NULL;
 	}
 
+	g_thread_producer = PRODUCER_OPUS;
+	
 	while (g_thread_producer)
 	{
 		if (audio_device_read_frames(g_audio_capture, raw_buffer, &raw_samples) == 0) 
