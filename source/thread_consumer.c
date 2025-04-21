@@ -50,6 +50,22 @@ extern void *thread_consumer_playback(void *argument)
 			break;
 		}
 
+		case PRODUCER_AAC:
+		{
+			int8_t aac_buffer[AAC_BUFFER_PAYLOADS];
+			int32_t aac_payloads = 0;
+			
+			while (g_thread_consumer)
+			{
+				codec_queue_pop(g_codec_queue, aac_buffer, &aac_payloads);
+				codec_aac_decode(g_codec_aac, raw_buffer, aac_buffer, &raw_samples, &aac_payloads);
+
+				audio_device_write_frames(g_audio_playback, raw_buffer, &raw_samples);
+			}
+
+			break;
+		}
+
 		case PRODUCER_OPUS:
 		{
 			int8_t opus_buffer[OPUS_BUFFER_PAYLOADS];
