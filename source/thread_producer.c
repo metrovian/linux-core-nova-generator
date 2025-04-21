@@ -3,6 +3,7 @@
 
 audio_device *g_audio_capture = NULL;
 audio_queue *g_audio_queue = NULL;
+codec_aac *g_codec_aac = NULL;
 codec_opus *g_codec_opus = NULL;
 codec_queue *g_codec_queue = NULL;
 thread_producer g_thread_producer = PRODUCER_NONE;
@@ -55,6 +56,79 @@ extern void *thread_producer_raw(void *argument)
 	free(g_audio_capture);
 
 	DBG_INFO("raw producer thread terminated");
+	return NULL;
+}
+
+extern void *thread_producer_aac(void *argument)
+{
+	if (g_thread_producer != PRODUCER_NONE)
+	{
+		DBG_WARN("failed to start aac producer thread");
+		return NULL;
+	}
+
+	DBG_INFO("aac producer thread started");	
+
+	g_audio_capture = CREATE(audio_device);
+	g_codec_aac = CREATE(codec_aac);
+
+	int16_t raw_buffer[AUD_BUFFER_FRAMES * AUD_CHANNELS];
+	int32_t raw_samples = 0;
+
+	int8_t aac_buffer[AAC_BUFFER_PAYLOADS];
+	int32_t aac_payloads = 0;
+
+	if (audio_device_open(g_audio_capture, AUD_MODE_CAPTURE, AUD_CHANNELS, AUD_SAMPLE_RATE) < 0)
+	{
+		free(g_audio_capture);
+		free(g_codec_aac);
+
+		DBG_WARN("aac producer thread terminated");
+		return NULL;
+	}
+	
+	if (codec_aac_open(g_codec_aac, AUD_CHANNELS, AUD_SAMPLE_RATE) < 0)
+	{
+		audio_device_close(g_audio_capture);
+		free(g_audio_capture);
+		free(g_codec_aac);
+
+		DBG_WARN("aac producer thread terminated");
+		return NULL;
+	}
+	
+	g_codec_queue = codec_queue_create(MAX_Q_CAPACITY_CODEC);
+
+	if (!g_codec_queue)
+	{
+		audio_device_close(g_audio_capture);
+		codec_aac_close(g_codec_aac);
+		free(g_audio_capture);
+		free(g_codec_aac);
+
+		DBG_WARN("aac producer thread terminated");
+		return NULL;
+	}
+
+	g_thread_producer = PRODUCER_AAC;
+	
+	while (g_thread_producer)
+	{
+		if (audio_device_read_frames(g_audio_capture, raw_buffer, &raw_samples) == 0) 
+		{
+			if (codec_aac_encode(g_codec_aac, raw_buffer, aac_buffer, &raw_samples, &aac_payloads) == 0)
+			{
+				codec_queue_push(g_codec_queue, aac_buffer, &aac_payloads);
+			}
+		}
+	}
+
+	audio_device_close(g_audio_capture);
+	codec_aac_close(g_codec_aac);
+	free(g_audio_capture);
+	free(g_codec_aac);
+
+	DBG_INFO("aac producer thread terminated");
 	return NULL;
 }
 
