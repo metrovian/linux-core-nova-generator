@@ -11,48 +11,36 @@ extern int8_t codec_aac_open(codec_aac *aucod, int16_t channels, int32_t sample_
 
 	if (aacEncoder_SetParam(aucod->encoder, AACENC_AOT, AAC_MODE) > 0)
 	{
-		aacEncClose(&aucod->encoder);
-
 		DBG_WARN("failed to set mode");
 		return -1;
 	}
 
 	if (aacEncoder_SetParam(aucod->encoder, AACENC_CHANNELMODE, channels) > 0)
 	{
-		aacEncClose(&aucod->encoder);
-	
 		DBG_WARN("failed to set channels");
 		return -1;
 	}
 
 	if (aacEncoder_SetParam(aucod->encoder, AACENC_SAMPLERATE, sample_rate) > 0)
 	{	
-		aacEncClose(&aucod->encoder);
-	
 		DBG_WARN("failed to set sample rate");
 		return -1;
 	}
 
 	if (aacEncoder_SetParam(aucod->encoder, AACENC_BITRATE, AAC_BIT_RATE) > 0)
 	{
-		aacEncClose(&aucod->encoder);
-
 		DBG_WARN("failed to set bit rate");
 		return -1;
 	}
 
 	if (aacEncoder_SetParam(aucod->encoder, AACENC_TRANSMUX, AAC_TRANSMUX) > 0)
 	{
-		aacEncClose(&aucod->encoder);
-		
 		DBG_WARN("failed to set transport multiplexing");
 		return -1;
 	}
 	
 	if (aacEncEncode(aucod->encoder, NULL, NULL, NULL, NULL) > 0)
 	{
-		aacEncClose(&aucod->encoder);
-		
 		DBG_WARN("failed to prepare encoder");
 		return -1;
 	}
@@ -61,8 +49,6 @@ extern int8_t codec_aac_open(codec_aac *aucod, int16_t channels, int32_t sample_
 		
 	if (!aucod->decoder)
 	{
-		aacEncClose(&aucod->encoder);
-
 		DBG_WARN("failed to open decoder");
 		return -1;
 	}
