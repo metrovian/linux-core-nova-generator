@@ -97,3 +97,59 @@ extern void *thread_consumer_playback(void *argument)
 	DBG_INFO("playback consumer thread terminated");
 	return NULL;
 }
+
+extern void *thread_consumer_transmission_hls(void *argument)
+{
+	if (g_thread_producer == PRODUCER_NONE)
+	{
+		DBG_WARN("failed to start hls transmission consumer thread");
+		return NULL;
+	}
+	
+	if (g_thread_consumer != CONSUMER_NONE)
+	{
+		DBG_WARN("failed to start hls transmission consumer thread");
+		return NULL;
+	}
+
+	FILE *stream = NULL;
+
+	if (stream_hls_open(&stream, (const char *)argument) < 0)
+	{
+		DBG_WARN("failed to start hls transmission consumer thread");
+		return NULL;
+	}
+
+	DBG_INFO("hls transmission consumer thread started");
+
+	int8_t aac_buffer[AAC_BUFFER_PAYLOADS];
+	int32_t aac_payloads = 0;
+			
+	g_thread_consumer = CONSUMER_TRANSMISSION_HLS;
+
+	switch (g_thread_producer)
+	{
+		case PRODUCER_AAC:
+		{
+			while (g_thread_consumer)
+			{
+				codec_queue_pop(g_codec_queue, aac_buffer, &aac_payloads);
+				stream_hls_transmission_payloads(&stream, aac_buffer, &aac_payloads);
+			}
+
+			break;
+		}
+
+		default:
+		{
+			DBG_WARN("invalid producer thread type");
+			break;
+		}
+	}
+
+	stream_hls_close(&stream);
+	
+	DBG_INFO("hls transmission consumer thread terminated");
+	return NULL;
+}
+
