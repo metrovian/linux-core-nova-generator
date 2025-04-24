@@ -3,7 +3,7 @@
 
 #define AUD_DEVICE_CAPTURE	"default"
 #define AUD_DEVICE_PLAYBACK	"default"
-#define AUD_CHANNELS		1
+#define AUD_CHANNELS		2
 #define AUD_SAMPLE_RATE		48000
 #define AUD_BUFFER_FRAMES	1024
 #define AUD_FORMAT		SND_PCM_FORMAT_S16_LE
