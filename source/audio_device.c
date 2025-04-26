@@ -102,7 +102,7 @@ extern int8_t audio_device_close(audio_device *audev)
 
 extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int32_t *read_samples)
 {
-	snd_pcm_sframes_t frames = snd_pcm_readi(audev->handle, auptr, AUD_BUFFER_FRAMES);
+	snd_pcm_sframes_t frames = snd_pcm_readi(audev->handle, auptr, *read_samples);
 	
 	if (frames < 0)
 	{

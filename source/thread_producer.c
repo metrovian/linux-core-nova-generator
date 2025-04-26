@@ -46,12 +46,14 @@ extern void *thread_producer_raw(void *argument)
 	
 	while (g_thread_producer)
 	{
+		raw_samples = AUD_BUFFER_FRAMES;
+
 		if (audio_device_read_frames(g_audio_capture, raw_buffer, &raw_samples) == 0) 
 		{
 			audio_queue_push(g_audio_queue, raw_buffer, &raw_samples);
 		}
 	}
-
+	
 	audio_device_close(g_audio_capture);
 	free(g_audio_capture);
 
@@ -72,7 +74,7 @@ extern void *thread_producer_aac(void *argument)
 	g_audio_capture = CREATE(audio_device);
 	g_codec_aac = CREATE(codec_aac);
 
-	int16_t raw_buffer[AUD_BUFFER_FRAMES * AUD_CHANNELS];
+	int16_t raw_buffer[AAC_BUFFER_FRAMES * AUD_CHANNELS];
 	int32_t raw_samples = 0;
 
 	int8_t aac_buffer[AAC_BUFFER_PAYLOADS];
@@ -114,6 +116,8 @@ extern void *thread_producer_aac(void *argument)
 	
 	while (g_thread_producer)
 	{
+		raw_samples = AAC_BUFFER_FRAMES;
+
 		if (audio_device_read_frames(g_audio_capture, raw_buffer, &raw_samples) == 0) 
 		{
 			if (codec_aac_encode(g_codec_aac, raw_buffer, aac_buffer, &raw_samples, &aac_payloads) == 0)
@@ -145,7 +149,7 @@ extern void *thread_producer_opus(void *argument)
 	g_audio_capture = CREATE(audio_device);
 	g_codec_opus = CREATE(codec_opus);
 
-	int16_t raw_buffer[AUD_BUFFER_FRAMES * AUD_CHANNELS];
+	int16_t raw_buffer[OPUS_BUFFER_FRAMES * AUD_CHANNELS];
 	int32_t raw_frames = 0;
 	int32_t raw_samples = 0;
 
@@ -188,6 +192,8 @@ extern void *thread_producer_opus(void *argument)
 	
 	while (g_thread_producer)
 	{
+		raw_samples = OPUS_BUFFER_FRAMES;
+		
 		if (audio_device_read_frames(g_audio_capture, raw_buffer, &raw_samples) == 0) 
 		{
 			raw_frames = raw_samples / AUD_CHANNELS;
