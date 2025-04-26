@@ -40,7 +40,9 @@ extern void *thread_consumer_playback(void *argument)
 	switch (g_thread_producer)
 	{
 		case PRODUCER_RAW:
-		{		
+		{	
+			raw_samples = AUD_BUFFER_FRAMES * AUD_CHANNELS;
+
 			while (g_thread_consumer)
 			{
 				audio_queue_pop(g_audio_queue, raw_buffer, &raw_samples);
