@@ -1,3 +1,5 @@
+NAME := NovaGenerator
+
 CC := gcc
 CFLAGS := -Iinclude -Wall -Wno-pointer-sign -Wno-incompatible-pointer-types
 LDFLAGS := -lasound -lfdk-aac -lopus -pthread
@@ -5,24 +7,25 @@ LDFLAGS := -lasound -lfdk-aac -lopus -pthread
 COMMON_SRCS := $(wildcard source/*.c)
 COMMON_OBJS := $(COMMON_SRCS:.c=.o)
 
-MAIN ?= app
-MAIN_SRC := module/main_$(MAIN).c
-MAIN_OBJ := $(MAIN_SRC:.c=.o)
+MODULE_SRCS := $(wildcard module/*.c)
+MODULE_OBJS := $(MODULE_SRCS:.c=.o)
 
-OBJS := $(COMMON_OBJS) $(MAIN_OBJ)
+MODULE := $(MODULE_SRCS:module/main_%.c=%)
 
-TARGET = NovaGenerator
+default: app
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+$(MODULE): %: $(COMMON_OBJS) module/main_%.o
+	@$(CC) $(COMMON_OBJS) module/main_$*.o -o $@ $(LDFLAGS)
+	@mv $@ $(NAME)
+	@echo '$@ build success'
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo '$@ compile success'
 
 list:
 	@ls module | grep '^main_.*\.c$$' | sed 's/^main_//; s/\.c//' | sort
 
 clean:
-	@rm -f $(OBJS) $(TARGET)
+	@rm -fv $(COMMON_OBJS) $(MODULE_OBJS)
+	@rm -fv $(NAME)
