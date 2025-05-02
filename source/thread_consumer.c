@@ -155,3 +155,58 @@ extern void *thread_consumer_transmission_hls(void *argument)
 	return NULL;
 }
 
+extern void *thread_consumer_transmission_dash(void *argument)
+{
+	if (g_thread_producer == PRODUCER_NONE)
+	{
+		DBG_WARN("failed to start dash transmission consumer thread");
+		return NULL;
+	}
+	
+	if (g_thread_consumer != CONSUMER_NONE)
+	{
+		DBG_WARN("failed to start dash transmission consumer thread");
+		return NULL;
+	}
+
+	FILE *stream = NULL;
+
+	if (stream_dash_open(&stream, (const char *)argument) < 0)
+	{
+		DBG_WARN("failed to start dash transmission consumer thread");
+		return NULL;
+	}
+
+	DBG_INFO("dash transmission consumer thread started");
+
+	int8_t aac_buffer[AAC_BUFFER_PAYLOADS];
+	int32_t aac_payloads = 0;
+			
+	g_thread_consumer = CONSUMER_TRANSMISSION_DASH;
+
+	switch (g_thread_producer)
+	{
+		case PRODUCER_AAC:
+		{
+			while (g_thread_consumer)
+			{
+				codec_queue_pop(g_codec_queue, aac_buffer, &aac_payloads);
+				stream_dash_transmission_payloads(&stream, aac_buffer, &aac_payloads);
+			}
+
+			break;
+		}
+
+		default:
+		{
+			DBG_WARN("invalid producer thread type");
+			break;
+		}
+	}
+
+	stream_dash_close(&stream);
+	
+	DBG_INFO("dash transmission consumer thread terminated");
+	return NULL;
+}
+
