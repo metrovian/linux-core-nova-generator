@@ -210,3 +210,58 @@ extern void *thread_consumer_transmission_dash(void *argument)
 	return NULL;
 }
 
+extern void *thread_consumer_transmission_janus(void *argument)
+{
+	if (g_thread_producer == PRODUCER_NONE)
+	{
+		DBG_WARN("failed to start janus transmission consumer thread");
+		return NULL;
+	}
+	
+	if (g_thread_consumer != CONSUMER_NONE)
+	{
+		DBG_WARN("failed to start janus transmission consumer thread");
+		return NULL;
+	}
+
+	FILE *stream = NULL;
+
+	if (stream_janus_open(&stream, (const char *)argument) < 0)
+	{
+		DBG_WARN("failed to start janus transmission consumer thread");
+		return NULL;
+	}
+
+	DBG_INFO("janus transmission consumer thread started");
+
+	int8_t opus_buffer[OPUS_BUFFER_PAYLOADS];
+	int32_t opus_payloads = 0;
+			
+	g_thread_consumer = CONSUMER_TRANSMISSION_JANUS;
+
+	switch (g_thread_producer)
+	{
+		case PRODUCER_OPUS:
+		{
+			while (g_thread_consumer)
+			{
+				codec_queue_pop(g_codec_queue, opus_buffer, &opus_payloads);
+				stream_janus_transmission_payloads(&stream, opus_buffer, &opus_payloads);
+			}
+
+			break;
+		}
+
+		default:
+		{
+			DBG_WARN("invalid producer thread type");
+			break;
+		}
+	}
+
+	stream_janus_close(&stream);
+	
+	DBG_INFO("janus transmission consumer thread terminated");
+	return NULL;
+}
+
