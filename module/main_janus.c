@@ -11,9 +11,16 @@ void HANDLE_SIGINT(int32_t signal)
 	return;
 }
 
+void HANDLE_SIGPIPE(int32_t signal)
+{
+	DBG_WARN("SIGPIPE");
+	return;
+}
+
 int32_t main(int32_t argc, char *argv[])
 {	
 	signal(SIGINT, HANDLE_SIGINT);
+	signal(SIGPIPE, HANDLE_SIGPIPE);
 
 	pthread_t pthread_producer;
 	pthread_t pthread_consumer;
