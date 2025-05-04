@@ -1,0 +1,11 @@
+opus-stream: {
+	type = "rtp"
+	id = 1
+	description = "Opus Streaming"
+	audio = true
+	video = false
+	audioport = 5555
+	audiopt = 111
+	audiocodec = "opus"
+}
+
