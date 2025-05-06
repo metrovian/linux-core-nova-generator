@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Nova Generator</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet"/>
+	<style>
+		body {
+			font-family: sans-serif;
+			text-align: center;
+			padding: 2em;
+			background: #f9f9f9;
+			margin: 0;
+		}
+
+		.audio-container {
+			max-width: 500px;
+			margin: 2em auto;
+			overflow: hidden;
+		}
+
+		.audio-player {
+			width: 100%;
+		}
+
+		@media (prefers-color-scheme: dark) {
+			body {
+				background: #121212;
+				color: #f0f0f0;
+			}
+
+			.audio-player {
+				background-color: #1e1e1e;
+				color: #ffffff;
+			}
+		}
+	</style>
+</head>
+<body>
+	<h1>Nova Generator</h1>
+
+	<div class="audio-container">
+		<audio
+			id="audio-player"
+			class="audio-player"
+			controls
+			preload="auto">
+		</audio>
+	</div>
+
+	<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+	<script>
+		const audio = document.getElementById('audio-player');
+		const dash = dashjs.MediaPlayer().create();
+		
+		dash.initialize(audio, "/dash/stream.mpd", true);
+	</script>
+</body>
+</html>
+
