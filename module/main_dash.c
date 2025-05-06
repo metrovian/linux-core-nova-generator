@@ -18,7 +18,16 @@ int32_t main(int32_t argc, char *argv[])
 	pthread_t pthread_producer;
 	pthread_t pthread_consumer;
 
-	if (argc == 2)
+	if (argc == 1)
+	{
+		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
+
+		usleep(AUD_BUFFER_TIMES);
+
+		pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_dash, "/var/www/dash");
+	}
+
+	else if (argc == 2)
 	{
 		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
 
