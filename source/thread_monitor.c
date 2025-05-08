@@ -8,7 +8,7 @@ static int32_t thread_monitor_tick = 0;
 static int32_t thread_monitor_audio_volume = 0;
 static int32_t thread_monitor_audio_count = 0;
 
-extern void thread_monitor_audio(int16_t *auptr, int32_t *read_samples)
+extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
 	double square = 0;
 	double rms = 0;

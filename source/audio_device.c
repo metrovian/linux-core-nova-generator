@@ -129,7 +129,7 @@ extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int3
 
 	*read_samples = frames * channels;
 
-	thread_monitor_audio(auptr, read_samples);
+	thread_monitor_audio_capture(auptr, read_samples);
 
 	return 0;
 }
