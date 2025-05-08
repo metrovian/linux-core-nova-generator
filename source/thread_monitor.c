@@ -31,11 +31,10 @@ extern void thread_monitor_audio(int16_t *auptr, int32_t *read_samples)
 
 extern void thread_monitor_start()
 {
-	pthread_t monitor;
-
 	thread_monitor_run = 1;
-	pthread_create(&monitor, NULL, thread_monitor, NULL);
-	
+
+	pthread_t monitor;
+	pthread_create(&monitor, NULL, thread_monitor, NULL);	
 	pthread_detach(monitor);
 
 	return;
