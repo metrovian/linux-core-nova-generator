@@ -4,6 +4,7 @@
 static pthread_mutex_t thread_monitor_audio_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int8_t thread_monitor_run = 0;
+static int32_t thread_monitor_tick = 0;
 static int32_t thread_monitor_audio_volume = 0;
 static int32_t thread_monitor_audio_count = 0;
 
@@ -55,17 +56,26 @@ extern void *thread_monitor(void *argument)
 
 	while (thread_monitor_run)
 	{
+		thread_monitor_tick = 0;
+		
+		while (thread_monitor_run && ++thread_monitor_tick < SYS_MONITOR_TICKS)
+		{
+			usleep(SYS_MONITOR_TIMES);
+		}
+		
 		pthread_mutex_lock(&thread_monitor_audio_mutex);
 		
-		audio_volume = thread_monitor_audio_volume / thread_monitor_audio_count;
+		if (thread_monitor_audio_count)
+		{
+			audio_volume = thread_monitor_audio_volume / thread_monitor_audio_count;
+		}
+
 		thread_monitor_audio_volume = 0;
 		thread_monitor_audio_count = 0;
 
 		pthread_mutex_unlock(&thread_monitor_audio_mutex);
 
 		DBG_INFO("%d dBFS", audio_volume);
-
-		usleep(1000000);
 	}
 
 	DBG_INFO("monitor thread terminated");
