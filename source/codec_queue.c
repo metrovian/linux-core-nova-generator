@@ -123,6 +123,7 @@ extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_payl
 	pthread_cond_signal(&coque->push_available);
 	pthread_mutex_unlock(&coque->mutex);
 
+	thread_monitor_stream_consume(pop_payloads);
 	return;
 }
 
