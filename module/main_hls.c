@@ -21,8 +21,6 @@ int32_t main(int32_t argc, char *argv[])
 	pthread_t pthread_producer;
 	pthread_t pthread_consumer;
 
-	thread_monitor_start();
-
 	if (argc == 1)
 	{
 		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
@@ -43,12 +41,12 @@ int32_t main(int32_t argc, char *argv[])
 
 	else
 	{
-		thread_monitor_stop();
-
 		DBG_WARN("invalid parameters");
 		return -1;
 	}
 
+	thread_monitor_start();
+	
 	while (g_thread_producer);
 
 	pthread_join(pthread_producer, NULL);
