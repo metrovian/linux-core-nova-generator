@@ -2,11 +2,16 @@
 #include "predefined.h"
 
 static pthread_mutex_t thread_monitor_audio_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t thread_monitor_codec_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static struct timespec thread_monitor_clock_start;
+static struct timespec thread_monitor_clock_end;
 
 static int8_t thread_monitor_run = 0;
-static int32_t thread_monitor_tick = 0;
 static int32_t thread_monitor_audio_volume = 0;
 static int32_t thread_monitor_audio_count = 0;
+static int32_t thread_monitor_codec_bitrate = 0;
+static int32_t thread_monitor_codec_count = 0;
 
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
@@ -30,6 +35,18 @@ extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 	return;
 }
 
+extern void thread_monitor_codec_encode(int32_t *packet_payloads)
+{
+	pthread_mutex_lock(&thread_monitor_codec_mutex);
+
+	thread_monitor_codec_bitrate += *packet_payloads * 8;
+	thread_monitor_codec_count += 1;
+
+	pthread_mutex_unlock(&thread_monitor_codec_mutex);
+
+	return;
+}
+
 extern void thread_monitor_start()
 {
 	thread_monitor_run = 1;
@@ -49,20 +66,37 @@ extern void thread_monitor_stop()
 }
 
 extern void *thread_monitor(void *argument)
-{
+{	
 	int32_t audio_volume = 0;
+	int32_t codec_bitrate = 0;
+	
+	time_t time_interval = 0;
+	time_t time_interval_sec = 0;
+	time_t time_interval_nsec = 0;
 
 	DBG_INFO("monitor thread started");
 
 	while (thread_monitor_run)
 	{
-		thread_monitor_tick = 0;
-		
-		while (thread_monitor_run && ++thread_monitor_tick < SYS_MONITOR_TICKS)
+		clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_start);
+
+		while (thread_monitor_run)
 		{
 			usleep(SYS_MONITOR_TIMES);
+
+			clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_end);
+			
+			time_interval_sec = thread_monitor_clock_end.tv_sec - thread_monitor_clock_start.tv_sec;
+			time_interval_nsec = thread_monitor_clock_end.tv_nsec - thread_monitor_clock_start.tv_nsec;
+
+			time_interval = time_interval_sec * 1000 + time_interval_nsec / 1000000;
+			
+			if (time_interval > SYS_MONITOR_INTERVALS)
+			{
+				break;
+			}
 		}
-		
+
 		pthread_mutex_lock(&thread_monitor_audio_mutex);
 		
 		if (thread_monitor_audio_count)
@@ -74,8 +108,24 @@ extern void *thread_monitor(void *argument)
 		thread_monitor_audio_count = 0;
 
 		pthread_mutex_unlock(&thread_monitor_audio_mutex);
+		pthread_mutex_lock(&thread_monitor_codec_mutex);
 
-		DBG_INFO("%d dBFS", audio_volume);
+		if (thread_monitor_codec_count)
+		{
+			codec_bitrate = (thread_monitor_codec_bitrate * 8) / time_interval;
+		}
+
+		thread_monitor_codec_bitrate = 0;
+		thread_monitor_codec_count = 0;
+
+		pthread_mutex_unlock(&thread_monitor_codec_mutex);
+
+		DBG_INFO(
+		"recorder: %d dbfs | "
+		"encoder: %d bps | "
+		"streamer: N/A bps | ", 
+		audio_volume, 
+		codec_bitrate);
 	}
 
 	DBG_INFO("monitor thread terminated");
