@@ -1,4 +1,5 @@
 #include "audio_device.h"
+#include "thread_monitor.h"
 #include "predefined.h"
 
 extern int8_t audio_device_open(audio_device *audev, int8_t aumod, int16_t channels, int32_t sample_rate)
@@ -128,6 +129,7 @@ extern int8_t audio_device_read_frames(audio_device *audev, int16_t *auptr, int3
 
 	*read_samples = frames * channels;
 
+	thread_monitor_audio_capture(auptr, read_samples);
 	return 0;
 }
 

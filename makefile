@@ -2,7 +2,7 @@ NAME := NovaGenerator
 
 CC := gcc
 CFLAGS := -Iinclude -Wall -Wno-pointer-sign -Wno-incompatible-pointer-types
-LDFLAGS := -lasound -lfdk-aac -lopus -pthread
+LDFLAGS := -lasound -lfdk-aac -lopus -lm -pthread
 
 COMMON_SRCS := $(wildcard source/*.c)
 COMMON_OBJS := $(COMMON_SRCS:.c=.o)

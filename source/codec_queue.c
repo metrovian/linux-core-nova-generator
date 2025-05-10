@@ -1,4 +1,5 @@
 #include "codec_queue.h"
+#include "thread_monitor.h"
 #include "predefined.h"
 
 extern codec_queue *codec_queue_create(int32_t cocap)
@@ -93,6 +94,7 @@ extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_pa
 	pthread_cond_signal(&coque->pop_available);
 	pthread_mutex_unlock(&coque->mutex);
 
+	thread_monitor_codec_encode(push_payloads);
 	return;
 }
 
@@ -121,6 +123,7 @@ extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_payl
 	pthread_cond_signal(&coque->push_available);
 	pthread_mutex_unlock(&coque->mutex);
 
+	thread_monitor_stream_consume(pop_payloads);
 	return;
 }
 
