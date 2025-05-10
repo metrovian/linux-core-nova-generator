@@ -1,4 +1,5 @@
 #include "audio_queue.h"
+#include "thread_monitor.h"
 #include "predefined.h"
 
 extern audio_queue *audio_queue_create(int32_t aucap)
@@ -73,6 +74,7 @@ extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_s
 	pthread_cond_signal(&auque->pop_available);
 	pthread_mutex_unlock(&auque->mutex);
 
+	thread_monitor_audio_capture(auptr, push_samples);
 	return;
 }
 
