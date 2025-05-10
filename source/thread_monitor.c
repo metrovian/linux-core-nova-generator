@@ -27,7 +27,8 @@ extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 	}
 
 	rms = sqrt(square / (double)(*read_samples));
-	
+	rms = (rms > 0.5) ? rms : 0.5;
+
 	pthread_mutex_lock(&thread_monitor_audio_mutex);
 
 	thread_monitor_audio_volume += (int32_t)(20 * log10(rms / 32768.0));
