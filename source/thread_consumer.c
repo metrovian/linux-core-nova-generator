@@ -149,7 +149,7 @@ extern void *thread_consumer_transmission_hls(void *argument)
 		}
 	}
 
-	stream_hls_close(&stream);
+	stream_hls_close(&stream, (const char *)argument);
 	
 	DBG_INFO("hls transmission consumer thread terminated");
 	return NULL;

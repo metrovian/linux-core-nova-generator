@@ -3,10 +3,25 @@
 
 extern int8_t stream_hls_open(FILE **stream, const char *path)
 {
+	char mount_command[512];
 	char stream_command[512];
 	char name_ts[64];
 	char name_m3u8[64];
 	
+	snprintf(
+	mount_command,
+	sizeof(mount_command),
+	"sudo "
+	"mount "
+	"-t tmpfs "
+	"-o size=%dM "
+	"tmpfs "
+	"%s",
+	MAX_M_CAPACITY_TMPFS,
+	path);
+
+	system(mount_command);
+
 	snprintf(name_ts, sizeof(name_ts), "'%s/segment_%%02d.ts'", path);
 	snprintf(name_m3u8, sizeof(name_m3u8), "'%s/stream.m3u8'", path);
 
@@ -38,8 +53,13 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 	return 0;
 }
 
-extern int8_t stream_hls_close(FILE **stream)
+extern int8_t stream_hls_close(FILE **stream, const char *path)
 {
+	char umount_command[256];
+
+	snprintf(umount_command, sizeof(umount_command), "sudo umount -f %s", path);
+	system(umount_command);
+
 	pclose(*stream);
 
 	DBG_INFO("hls stream close success");
