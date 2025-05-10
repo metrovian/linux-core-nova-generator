@@ -74,7 +74,6 @@ extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_s
 	pthread_cond_signal(&auque->pop_available);
 	pthread_mutex_unlock(&auque->mutex);
 
-	thread_monitor_audio_capture(auptr, push_samples);
 	return;
 }
 
@@ -98,6 +97,7 @@ extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_sam
 	pthread_cond_signal(&auque->push_available);
 	pthread_mutex_unlock(&auque->mutex);
 
+	thread_monitor_stream_consume(pop_samples);
 	return;
 }
 
