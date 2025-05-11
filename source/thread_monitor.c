@@ -112,26 +112,9 @@ extern void *thread_monitor(void *argument)
 	DBG_INFO("monitor thread started");
 
 	while (thread_monitor_run)
-	{
+	{	
 		clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_start);
-
-		while (thread_monitor_run)
-		{
-			usleep(SYS_MONITOR_TIMES);
-
-			clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_end);
-			
-			time_interval_sec = thread_monitor_clock_end.tv_sec - thread_monitor_clock_start.tv_sec;
-			time_interval_nsec = thread_monitor_clock_end.tv_nsec - thread_monitor_clock_start.tv_nsec;
-
-			time_interval = time_interval_sec * 1000 + time_interval_nsec / 1000000;
-			
-			if (time_interval > SYS_MONITOR_INTERVALS)
-			{
-				break;
-			}
-		}
-
+		
 		snprintf(
 		command_cpu,
 		sizeof(command_cpu),
@@ -185,7 +168,24 @@ extern void *thread_monitor(void *argument)
 
 		pclose(stream_cpu);
 		pclose(stream_memory);
+	
+		while (thread_monitor_run)
+		{
+			usleep(SYS_MONITOR_TIMES);
 
+			clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_end);
+			
+			time_interval_sec = thread_monitor_clock_end.tv_sec - thread_monitor_clock_start.tv_sec;
+			time_interval_nsec = thread_monitor_clock_end.tv_nsec - thread_monitor_clock_start.tv_nsec;
+
+			time_interval = time_interval_sec * 1000 + time_interval_nsec / 1000000;
+			
+			if (time_interval > SYS_MONITOR_INTERVALS)
+			{
+				break;
+			}
+		}
+	
 		pthread_mutex_lock(&thread_monitor_audio_mutex);
 		
 		if (thread_monitor_audio_count)
@@ -221,11 +221,11 @@ extern void *thread_monitor(void *argument)
 		pthread_mutex_unlock(&thread_monitor_stream_mutex);
 
 		DBG_INFO(
-		"cpu: %s%% | "
-		"memory: %s%% | "
-		"recorder: %d dbfs | "
-		"encoder: %d kbps | "
-		"streamer: %d kbps | ",
+		"cpu: %-3s%% | "
+		"memory: %-3s%% | "
+		"recorder: %-3d dbfs | "
+		"encoder: %-3d kbps | "
+		"streamer: %-3d kbps | ",
 	       	resource_cpu,
 		resource_memory,
 		audio_volume, 
