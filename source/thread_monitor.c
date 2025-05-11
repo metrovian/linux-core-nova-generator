@@ -107,39 +107,7 @@ extern void *thread_monitor(void *argument)
 
 	time_t time_interval = 0;
 	time_t time_interval_sec = 0;
-	time_t time_interval_nsec = 0;
-	
-	if (strlen(thread_monitor_resource_path))
-	{
-		snprintf(
-		command_memory,
-		sizeof(command_memory),
-		"df -h | "
-		"grep tmpfs | "
-		"grep %s | "
-		"awk '{print $5}' | "
-		"tr -d '%%\n'",
-		thread_monitor_resource_path);
-	}
-
-	else
-	{
-		snprintf(
-		command_memory,
-		sizeof(command_memory),
-		"top -bn1 | "
-		"grep 'MiB Mem' | "
-		"awk '{print int((int($8)*100)/int($4))}' | "
-		"tr -d '\n'");	
-	}
-
-	stream_memory = popen(command_memory, "r");
-
-	if (!stream_memory)
-	{
-		DBG_WARN("failed to open memory stream");
-		return NULL;
-	}
+	time_t time_interval_nsec = 0;	
 
 	DBG_INFO("monitor thread started");
 
@@ -164,7 +132,59 @@ extern void *thread_monitor(void *argument)
 			}
 		}
 
+		snprintf(
+		command_cpu,
+		sizeof(command_cpu),
+		"top -bn1 | "
+		"grep '%%Cpu(s)' | "
+		"awk '{print int(100-$8)}' | "
+		"tr -d '\n'");
+
+		stream_cpu = popen(command_cpu, "r");
+
+		if (!stream_cpu)
+		{
+			DBG_WARN("failed to open cpu stream");
+			break;
+		}
+
+		if (strlen(thread_monitor_resource_path))
+		{
+			snprintf(
+			command_memory,
+			sizeof(command_memory),
+			"df -h | "
+			"grep tmpfs | "
+			"grep %s | "
+			"awk '{print $5}' | "
+			"tr -d '%%\n'",
+			thread_monitor_resource_path);
+		}
+
+		else
+		{
+			snprintf(
+			command_memory,
+			sizeof(command_memory),
+			"top -bn1 | "
+			"grep 'MiB Mem' | "
+			"awk '{print int((int($8)*100)/int($4))}' | "
+			"tr -d '\n'");	
+		}
+
+		stream_memory = popen(command_memory, "r");
+
+		if (!stream_memory)
+		{
+			DBG_WARN("failed to open memory stream");
+			break;
+		}
+		
+		fgets(resource_cpu, sizeof(resource_cpu), stream_cpu);
 		fgets(resource_memory, sizeof(resource_memory), stream_memory);
+
+		pclose(stream_cpu);
+		pclose(stream_memory);
 
 		pthread_mutex_lock(&thread_monitor_audio_mutex);
 		
@@ -201,12 +221,13 @@ extern void *thread_monitor(void *argument)
 		pthread_mutex_unlock(&thread_monitor_stream_mutex);
 
 		DBG_INFO(
-		"cpu: N/A%% | "
+		"cpu: %s%% | "
 		"memory: %s%% | "
 		"recorder: %d dbfs | "
 		"encoder: %d kbps | "
 		"streamer: %d kbps | ",
-	       	resource_memory,
+	       	resource_cpu,
+		resource_memory,
 		audio_volume, 
 		codec_bitrate,
 		stream_bitrate);
