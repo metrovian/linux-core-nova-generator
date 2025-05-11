@@ -1,5 +1,6 @@
 #include "thread_producer.h"
 #include "thread_consumer.h"
+#include "thread_monitor.h"
 #include "predefined.h"
 
 void HANDLE_SIGINT(int32_t signal)
@@ -7,6 +8,8 @@ void HANDLE_SIGINT(int32_t signal)
 	g_thread_producer = PRODUCER_NONE;
 	g_thread_consumer = CONSUMER_NONE;
 	
+	thread_monitor_stop();
+
 	DBG_WARN("SIGINT");
 	return;
 }
@@ -42,11 +45,15 @@ int32_t main(int32_t argc, char *argv[])
 		return -1;
 	}
 
+	thread_monitor_start();
+
 	while (g_thread_producer);
 
 	pthread_join(pthread_producer, NULL);
 	pthread_join(pthread_consumer, NULL);	
 	
+	thread_monitor_stop();
+
 	return 0;
 }
 
