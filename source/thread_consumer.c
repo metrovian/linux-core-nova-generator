@@ -204,7 +204,7 @@ extern void *thread_consumer_transmission_dash(void *argument)
 		}
 	}
 
-	stream_dash_close(&stream);
+	stream_dash_close(&stream, (const char *)argument);
 	
 	DBG_INFO("dash transmission consumer thread terminated");
 	return NULL;
