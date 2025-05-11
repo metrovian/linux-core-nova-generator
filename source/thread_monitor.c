@@ -8,13 +8,15 @@ static pthread_mutex_t thread_monitor_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct timespec thread_monitor_clock_start;
 static struct timespec thread_monitor_clock_end;
 
+static char thread_monitor_resource_path[256];
+
 static int8_t thread_monitor_run = 0;
 static int32_t thread_monitor_audio_volume = 0;
 static int32_t thread_monitor_audio_count = 0;
 static int32_t thread_monitor_codec_bitrate = 0;
 static int32_t thread_monitor_codec_count = 0;
 static int32_t thread_monitor_stream_bitrate = 0;
-static int32_t thread_monitor_stream_count =0;
+static int32_t thread_monitor_stream_count = 0;
 
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
@@ -63,6 +65,13 @@ extern void thread_monitor_stream_consume(int32_t *packet_payloads)
 	return;
 }
 
+extern void thread_monitor_resource_ramdisk(const char *path)
+{
+	strncpy(thread_monitor_resource_path, path, sizeof(thread_monitor_resource_path));
+
+	return;
+}
+
 extern void thread_monitor_start()
 {
 	thread_monitor_run = 1;
@@ -83,6 +92,15 @@ extern void thread_monitor_stop()
 
 extern void *thread_monitor(void *argument)
 {	
+	FILE *stream_cpu = NULL;
+	FILE *stream_memory = NULL;
+
+	char command_cpu[512];
+	char command_memory[512];
+
+	char resource_cpu[32];
+	char resource_memory[32];
+
 	int32_t audio_volume = 0;
 	int32_t codec_bitrate = 0;
 	int32_t stream_bitrate = 0;
@@ -90,6 +108,38 @@ extern void *thread_monitor(void *argument)
 	time_t time_interval = 0;
 	time_t time_interval_sec = 0;
 	time_t time_interval_nsec = 0;
+	
+	if (strlen(thread_monitor_resource_path))
+	{
+		snprintf(
+		command_memory,
+		sizeof(command_memory),
+		"df -h | "
+		"grep tmpfs | "
+		"grep %s | "
+		"awk '{print $5}' | "
+		"tr -d '%%\n'",
+		thread_monitor_resource_path);
+	}
+
+	else
+	{
+		snprintf(
+		command_memory,
+		sizeof(command_memory),
+		"top -bn1 | "
+		"grep 'MiB Mem' | "
+		"awk '{print int((int($8)*100)/int($4))}' | "
+		"tr -d '\n'");	
+	}
+
+	stream_memory = popen(command_memory, "r");
+
+	if (!stream_memory)
+	{
+		DBG_WARN("failed to open memory stream");
+		return NULL;
+	}
 
 	DBG_INFO("monitor thread started");
 
@@ -113,6 +163,8 @@ extern void *thread_monitor(void *argument)
 				break;
 			}
 		}
+
+		fgets(resource_memory, sizeof(resource_memory), stream_memory);
 
 		pthread_mutex_lock(&thread_monitor_audio_mutex);
 		
@@ -149,9 +201,12 @@ extern void *thread_monitor(void *argument)
 		pthread_mutex_unlock(&thread_monitor_stream_mutex);
 
 		DBG_INFO(
+		"cpu: N/A%% | "
+		"memory: %s%% | "
 		"recorder: %d dbfs | "
 		"encoder: %d kbps | "
-		"streamer: %d kbps | ", 
+		"streamer: %d kbps | ",
+	       	resource_memory,
 		audio_volume, 
 		codec_bitrate,
 		stream_bitrate);
