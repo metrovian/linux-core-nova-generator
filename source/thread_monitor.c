@@ -108,6 +108,38 @@ extern void *thread_monitor(void *argument)
 	time_t time_interval = 0;
 	time_t time_interval_sec = 0;
 	time_t time_interval_nsec = 0;	
+	
+	snprintf(
+	command_cpu,
+	sizeof(command_cpu),
+	"top -bn1 | "
+	"grep '%%Cpu(s)' | "
+	"awk '{print int(100-$8)}' | "
+	"tr -d '\n'");
+
+	if (strlen(thread_monitor_resource_path))
+	{
+		snprintf(
+		command_memory,
+		sizeof(command_memory),
+		"df -h | "
+		"grep tmpfs | "
+		"grep %s | "
+		"awk '{print $5}' | "
+		"tr -d '%%\n'",
+		thread_monitor_resource_path);
+	}
+
+	else
+	{
+		snprintf(
+		command_memory,
+		sizeof(command_memory),
+		"top -bn1 | "
+		"grep 'MiB Mem' | "
+		"awk '{print int((int($8)*100)/int($4))}' | "
+		"tr -d '\n'");	
+	}
 
 	DBG_INFO("monitor thread started");
 
@@ -115,47 +147,14 @@ extern void *thread_monitor(void *argument)
 	{	
 		clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_start);
 		
-		snprintf(
-		command_cpu,
-		sizeof(command_cpu),
-		"top -bn1 | "
-		"grep '%%Cpu(s)' | "
-		"awk '{print int(100-$8)}' | "
-		"tr -d '\n'");
-
 		stream_cpu = popen(command_cpu, "r");
-
+		stream_memory = popen(command_memory, "r");
+		
 		if (!stream_cpu)
 		{
 			DBG_WARN("failed to open cpu stream");
 			break;
 		}
-
-		if (strlen(thread_monitor_resource_path))
-		{
-			snprintf(
-			command_memory,
-			sizeof(command_memory),
-			"df -h | "
-			"grep tmpfs | "
-			"grep %s | "
-			"awk '{print $5}' | "
-			"tr -d '%%\n'",
-			thread_monitor_resource_path);
-		}
-
-		else
-		{
-			snprintf(
-			command_memory,
-			sizeof(command_memory),
-			"top -bn1 | "
-			"grep 'MiB Mem' | "
-			"awk '{print int((int($8)*100)/int($4))}' | "
-			"tr -d '\n'");	
-		}
-
-		stream_memory = popen(command_memory, "r");
 
 		if (!stream_memory)
 		{
