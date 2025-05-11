@@ -3,14 +3,14 @@
 
 extern int8_t stream_hls_open(FILE **stream, const char *path)
 {
-	char mount_command[512];
-	char stream_command[512];
+	char command_mount[512];
+	char command_stream[512];
 	char name_ts[64];
 	char name_m3u8[64];
 	
 	snprintf(
-	mount_command,
-	sizeof(mount_command),
+	command_mount,
+	sizeof(command_mount),
 	"sudo "
 	"mount "
 	"-t tmpfs "
@@ -20,14 +20,14 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 	MAX_M_CAPACITY_TMPFS,
 	path);
 
-	system(mount_command);
+	system(command_mount);
 
 	snprintf(name_ts, sizeof(name_ts), "'%s/segment_%%02d.ts'", path);
 	snprintf(name_m3u8, sizeof(name_m3u8), "'%s/stream.m3u8'", path);
 
 	snprintf(
-	stream_command, 
-	sizeof(stream_command),
+	command_stream, 
+	sizeof(command_stream),
 	"sudo "
 	"ffmpeg "
 	"-loglevel error "
@@ -41,7 +41,7 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 	name_ts, 
 	name_m3u8);
 
-	*stream = popen(stream_command, "w");
+	*stream = popen(command_stream, "w");
 
 	if(!*stream)
 	{
@@ -55,10 +55,10 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 
 extern int8_t stream_hls_close(FILE **stream, const char *path)
 {
-	char umount_command[256];
+	char command_umount[256];
 
-	snprintf(umount_command, sizeof(umount_command), "sudo umount -f %s", path);
-	system(umount_command);
+	snprintf(command_umount, sizeof(command_umount), "sudo umount -f %s", path);
+	system(command_umount);
 
 	pclose(*stream);
 

@@ -3,11 +3,11 @@
 
 extern int8_t stream_janus_open(FILE **stream, const char *path)
 {
-	char stream_command[512];
+	char command_stream[512];
 	
 	snprintf(
-	stream_command, 
-	sizeof(stream_command),
+	command_stream, 
+	sizeof(command_stream),
 	"sudo "
 	"gst-launch-1.0 -q "
 	"fdsrc ! "
@@ -18,7 +18,7 @@ extern int8_t stream_janus_open(FILE **stream, const char *path)
 	"udpsink host=%s port=5555",
 	path);
 
-	*stream = popen(stream_command, "w");
+	*stream = popen(command_stream, "w");
 
 	if(!*stream)
 	{
