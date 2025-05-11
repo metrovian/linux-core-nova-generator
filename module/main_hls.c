@@ -21,22 +21,14 @@ int32_t main(int32_t argc, char *argv[])
 	pthread_t pthread_producer;
 	pthread_t pthread_consumer;
 
-	if (argc == 1)
-	{
-		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
+	char path_hls[256];
 
-		usleep(AUD_BUFFER_TIMES);
-		
-		pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_hls, "/var/www/hls");
-	}
-
-	else if (argc == 2)
+	if (argc == 1 || argc == 2)
 	{
 		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
 		
-		usleep(AUD_BUFFER_TIMES);
-
-		pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_hls, argv[1]);
+		if (argc == 1) strncpy(path_hls, "/var/www/hls", sizeof(path_hls));
+		if (argc == 2) strncpy(path_hls, argv[1], sizeof(path_hls));
 	}
 
 	else
@@ -45,6 +37,11 @@ int32_t main(int32_t argc, char *argv[])
 		return -1;
 	}
 
+	usleep(AUD_BUFFER_TIMES);
+	
+	pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_hls, path_hls);
+
+	thread_monitor_resource_ramdisk(path_hls);
 	thread_monitor_start();
 	
 	while (g_thread_producer);
