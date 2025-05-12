@@ -36,7 +36,7 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 	"-c:a copy "
 	"-f hls "
 	"-hls_time 5 "
-	"-hls_list_size 5 "
+	"-hls_list_size 0 "
 	"-hls_segment_filename %s %s",
 	name_ts, 
 	name_m3u8);
@@ -56,8 +56,25 @@ extern int8_t stream_hls_open(FILE **stream, const char *path)
 extern int8_t stream_hls_close(FILE **stream, const char *path)
 {
 	char command_umount[256];
+	char command_save[256];
+	char name_m3u8[64];
+	
+	snprintf(name_m3u8, sizeof(name_m3u8), "'%s/stream.m3u8'", path);
+
+	snprintf(
+	command_save,
+	sizeof(command_save),
+	"sudo "
+	"ffmpeg "
+	"-loglevel error "
+	"-i %s "
+	"-c:a copy "
+	"-bsf:a aac_adtstoasc record_$(date +%%Y%%m%%d_%%H%%M%%S).m4a",
+	name_m3u8);
 
 	snprintf(command_umount, sizeof(command_umount), "sudo umount -f %s", path);
+	
+	system(command_save);
 	system(command_umount);
 
 	pclose(*stream);
