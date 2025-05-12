@@ -52,8 +52,24 @@ extern int8_t stream_dash_open(FILE **stream, const char *path)
 extern int8_t stream_dash_close(FILE **stream, const char *path)
 {
 	char command_umount[256];
+	char command_save[256];
+	char name_mpd[64];
+	
+	snprintf(name_mpd, sizeof(name_mpd), "'%s/stream.mpd'", path);
+
+	snprintf(
+	command_save,
+	sizeof(command_save),
+	"sudo "
+	"ffmpeg "
+	"-loglevel error "
+	"-i %s "
+	"-c:a copy record_$(date +%%Y%%m%%d_%%H%%M%%S).m4a",
+	name_mpd);
 
 	snprintf(command_umount, sizeof(command_umount), "sudo umount -f %s", path);
+	
+	system(command_save);
 	system(command_umount);
 
 	pclose(*stream);
