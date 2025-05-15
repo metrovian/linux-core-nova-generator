@@ -223,10 +223,10 @@ extern void *thread_monitor(void *argument)
 
 		DBG_INFO(
 		"cpu: %-3s%% | "
-		"memory: %-3s%% | "
-		"recorder: %-3d dbfs | "
-		"encoder: %-3d kbps | "
-		"streamer: %-3d kbps | ",
+		"mem: %-3s%% | "
+		"rec: %-3d dbfs | "
+		"enc: %-3d kbps | "
+		"str: %-3d kbps | ",
 	       	resource_cpu,
 		resource_memory,
 		audio_volume, 
