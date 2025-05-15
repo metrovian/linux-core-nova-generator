@@ -112,10 +112,12 @@ extern void *thread_monitor(void *argument)
 	snprintf(
 	command_cpu,
 	sizeof(command_cpu),
-	"top -bn1 | "
+	"top -bn%d -d1 | "
 	"grep '%%Cpu(s)' | "
-	"awk '{print int(100-$8)}' | "
-	"tr -d '\n'");
+	"awk '{print (100-$8)}' | "
+	"awk '{sum+=$1} END {print int(sum/NR)}' | "
+	"tr -d '\n'",
+	SYS_MONITOR_INTERVALS / 1000);
 
 	if (strlen(thread_monitor_resource_path))
 	{
