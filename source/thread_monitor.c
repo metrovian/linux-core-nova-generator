@@ -112,10 +112,9 @@ extern void *thread_monitor(void *argument)
 	snprintf(
 	command_cpu,
 	sizeof(command_cpu),
-	"top -bn%d -d1 | "
-	"grep '%%Cpu(s)' | "
-	"awk '{print (100-$8)}' | "
-	"awk '{sum+=$1} END {print int(sum/NR)}' | "
+	"mpstat 1 %d | "
+	"grep 'Average' | "
+	"awk '{print int(100-$12)}' | "
 	"tr -d '\n'",
 	SYS_MONITOR_INTERVALS / 1000);
 
