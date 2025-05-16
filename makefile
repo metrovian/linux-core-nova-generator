@@ -12,11 +12,12 @@ MODULE_OBJS := $(MODULE_SRCS:.c=.o)
 
 MODULE := $(MODULE_SRCS:module/main_%.c=%)
 
-default: app
+default: $(MODULE)
 
 $(MODULE): %: $(COMMON_OBJS) module/main_%.o
 	@$(CC) $(COMMON_OBJS) module/main_$*.o -o $@ $(LDFLAGS)
-	@mv $@ $(NAME)
+	@mkdir -pv bin/
+	@mv $@ bin/
 	@echo '$@ build success'
 
 %.o: %.c
