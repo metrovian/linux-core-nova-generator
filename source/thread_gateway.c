@@ -16,7 +16,14 @@ static void thread_gateway_zookeeper_watcher(
 		const char *path,
 		void *watcher)
 {
-	
+	if (state == ZOO_CONNECTED_STATE) 
+	{
+		DBG_INFO("zookeeper service connected");
+		return;
+	}
+
+	DBG_WARN("invalid zookeeper state");
+	return;
 }
 
 static int8_t thread_gateway_zookeeper_connect()
@@ -47,7 +54,7 @@ static char *thread_gateway_zookeeper_balance()
 
 	if (zoo_get_children(thread_gateway_zookeeper, "/modules", 0, &modules) != ZOK)
 	{
-		DBG_WARN("failed to get modules");
+		DBG_WARN("failed to get proper modules");
 		return "";
 	}
 
@@ -110,7 +117,11 @@ static int32_t thread_gateway_request_handler(
 		return MHD_NO;
 	}
 
-	struct MHD_Response *response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
+	struct MHD_Response *response = 
+		MHD_create_response_from_buffer(
+		0, 
+		"", 
+		MHD_RESPMEM_PERSISTENT);
 
 	if (!response)
 	{
@@ -136,14 +147,15 @@ static int32_t thread_gateway_request_handler(
 
 extern void thread_gateway_start()
 {	
-	thread_gateway = MHD_start_daemon(
-			MHD_USE_SELECT_INTERNALLY,
-			80,
-			NULL,
-			NULL,
-			&thread_gateway_request_handler,
-			NULL,
-			MHD_OPTION_END);
+	thread_gateway = 
+		MHD_start_daemon(
+		MHD_USE_SELECT_INTERNALLY,
+		80,
+		NULL,
+		NULL,
+		&thread_gateway_request_handler,
+		NULL,
+		MHD_OPTION_END);
 
 	if (!thread_gateway)
 	{
@@ -185,7 +197,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			snprintf(
 			notice, 
 			sizeof(notice), 
-			"round-robin load balancing rule selected");
+			"round robin selected");
 			
 			break;
 		}
@@ -200,3 +212,4 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 	DBG_INFO("%s", notice);
 	return;
 }
+
