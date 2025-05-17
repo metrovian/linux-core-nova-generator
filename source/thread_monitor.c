@@ -45,7 +45,7 @@ static void thread_monitor_zookeeper_watcher(
 {
         if (state == ZOO_CONNECTED_STATE)
         {
-                DBG_INFO("zookeeper service connected");
+                DBG_INFO("zookeeper service started");
                 return;
         }
 
@@ -317,21 +317,7 @@ extern void *thread_monitor(void *argument)
 					sizeof(zookeeper_path));
 			}
 
-			else
-			{
-				zookeeper_code = 
-					zoo_create(
-					zookeeper_handle,
-					zookeeper_path,
-					zookeeper_url,
-					strlen(zookeeper_url),
-					&ZOO_OPEN_ACL_UNSAFE,
-					ZOO_EPHEMERAL,
-					NULL,
-					-1);
-			}
-
-			if (zookeeper_code == ZNODEEXISTS)
+			else if (zookeeper_code == ZNODEEXISTS)
 			{
 				zookeeper_code =
 					zoo_set(
@@ -360,6 +346,13 @@ extern void *thread_monitor(void *argument)
 		audio_volume, 
 		codec_bitrate,
 		stream_bitrate);
+	}
+
+	if (strlen(thread_monitor_zookeeper_path) > 0)
+	{
+		zookeeper_close(zookeeper_handle);
+
+		DBG_INFO("zookeeper service terminated");
 	}
 
 	DBG_INFO("monitor thread terminated");
