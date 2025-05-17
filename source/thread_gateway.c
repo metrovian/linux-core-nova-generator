@@ -1,6 +1,9 @@
 #include "thread_gateway.h"
 #include "predefined.h"
 
+extern int32_t zoo_get_children(zhandle_t *zh, const char *path, int watch, struct String_vector *strings);
+extern int32_t zoo_get(zhandle_t *zh, const char *path, int watch, char *buffer, int *buffer_len, struct Stat *stat);
+
 static struct MHD_Daemon *thread_gateway = NULL;
 static struct zhandle_t *thread_gateway_zookeeper = NULL;
 
