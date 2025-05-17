@@ -22,13 +22,17 @@ int32_t main(int32_t argc, char *argv[])
 	pthread_t pthread_consumer;
 	
 	char path_dash[256];
+	char path_zk[256];
 
-	if (argc == 1 || argc == 2)
+	if (argc == 1 || argc == 2 || argc == 3)
 	{
 		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
+		
+		strncpy(path_dash, "/var/www/dash", sizeof(path_dash));
+		strncpy(path_zk, "", sizeof(path_zk));
 
-		if (argc == 1) strncpy(path_dash, "/var/www/dash", sizeof(path_dash));
-		if (argc == 2) strncpy(path_dash, argv[1], sizeof(path_dash));
+		if (argc == 2) strncpy(path_zk, argv[1], sizeof(path_zk));
+		if (argc == 3) strncpy(path_dash, argv[2], sizeof(path_dash));
 	}
 
 	else
@@ -42,6 +46,8 @@ int32_t main(int32_t argc, char *argv[])
 	pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_dash, path_dash);
 	
 	thread_monitor_resource_ramdisk(path_dash);
+	thread_monitor_zookeeper_gateway(path_zk);
+
 	thread_monitor_start();
 
 	while (g_thread_producer);
