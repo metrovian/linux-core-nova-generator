@@ -1,6 +1,23 @@
 #include "thread_monitor.h"
 #include "predefined.h"
 
+extern int32_t zoo_create(
+		zhandle_t *zh,
+		const char *path,
+		const char *value,
+		int value_len,
+		const struct ACL_vector *acl,
+		int flags,
+		char *path_buffer,
+		int path_buffer_len);
+
+extern int32_t zoo_set(
+		zhandle_t *zh,
+		const char *path,
+		const char *buffer,
+		int buffer_len,
+		int version);
+
 static pthread_mutex_t thread_monitor_audio_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t thread_monitor_codec_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t thread_monitor_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
