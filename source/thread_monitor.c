@@ -9,6 +9,7 @@ static struct timespec thread_monitor_clock_start;
 static struct timespec thread_monitor_clock_end;
 
 static char thread_monitor_resource_path[256];
+static char thread_monitor_zookeeper_path[256];
 
 static int8_t thread_monitor_run = 0;
 static int32_t thread_monitor_audio_volume = 0;
@@ -17,6 +18,23 @@ static int32_t thread_monitor_codec_bitrate = 0;
 static int32_t thread_monitor_codec_count = 0;
 static int32_t thread_monitor_stream_bitrate = 0;
 static int32_t thread_monitor_stream_count = 0;
+
+static void thread_monitor_zookeeper_watcher(
+                zhandle_t *handle,
+                int32_t type,
+                int32_t state,
+                const char *path,
+                void *watcher)
+{
+        if (state == ZOO_CONNECTED_STATE)
+        {
+                DBG_INFO("zookeeper service connected");
+                return;
+        }
+
+        DBG_WARN("invalid zookeeper state");
+        return;
+}
 
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
@@ -72,6 +90,13 @@ extern void thread_monitor_resource_ramdisk(const char *path)
 	return;
 }
 
+extern void thread_monitor_zookeeper_gateway(const char *path)
+{
+	strncpy(thread_monitor_zookeeper_path, path, sizeof(thread_monitor_zookeeper_path));
+
+	return;
+}
+
 extern void thread_monitor_start()
 {
 	thread_monitor_run = 1;
@@ -108,7 +133,9 @@ extern void *thread_monitor(void *argument)
 	time_t time_interval = 0;
 	time_t time_interval_sec = 0;
 	time_t time_interval_nsec = 0;	
-	
+
+	zhandle_t *zookeeper_handle = NULL;
+
 	snprintf(
 	command_cpu,
 	sizeof(command_cpu),
@@ -140,6 +167,26 @@ extern void *thread_monitor(void *argument)
 		"grep 'MiB Mem' | "
 		"awk '{print int((int($8)*100)/int($4))}' | "
 		"tr -d '\n'");	
+	}
+
+	if (strlen(thread_monitor_zookeeper_path) > 0)
+	{
+		zoo_set_debug_level(ZOO_LOG_LEVEL_ERROR);
+
+		zookeeper_handle =
+			zookeeper_init(
+			thread_monitor_zookeeper_path,
+			thread_monitor_zookeeper_watcher,
+			3000,
+			0,
+			0,
+			0);
+
+		if (!zookeeper_handle)
+		{
+			DBG_WARN("failed to connect zookeeper service");
+			return NULL;
+		}
 	}
 
 	DBG_INFO("monitor thread started");
@@ -219,6 +266,71 @@ extern void *thread_monitor(void *argument)
 		thread_monitor_stream_count = 0;
 
 		pthread_mutex_unlock(&thread_monitor_stream_mutex);
+
+		if (zookeeper_handle)
+		{
+			static char zookeeper_path[256] = "";
+			static char zookeeper_url[256] = "http://192.168.50.100";
+			
+			int32_t zookeeper_code = 0;
+
+			if (strlen(zookeeper_path) == 0)
+			{
+				zookeeper_code =
+					zoo_create(
+					zookeeper_handle,
+					"/modules",
+					NULL,
+					-1,
+					&ZOO_OPEN_ACL_UNSAFE,
+					0,
+					NULL,
+					0);
+
+				zookeeper_code = 
+					zoo_create(
+					zookeeper_handle,
+					"/modules/module-",
+					zookeeper_url,
+					strlen(zookeeper_url),
+					&ZOO_OPEN_ACL_UNSAFE,
+					ZOO_EPHEMERAL |
+					ZOO_SEQUENCE,
+					zookeeper_path,
+					sizeof(zookeeper_path));
+			}
+
+			else
+			{
+				zookeeper_code = 
+					zoo_create(
+					zookeeper_handle,
+					zookeeper_path,
+					zookeeper_url,
+					strlen(zookeeper_url),
+					&ZOO_OPEN_ACL_UNSAFE,
+					ZOO_EPHEMERAL,
+					NULL,
+					-1);
+			}
+
+			if (zookeeper_code == ZNODEEXISTS)
+			{
+				zookeeper_code =
+					zoo_set(
+					zookeeper_handle,
+					zookeeper_path,
+					zookeeper_url,
+					strlen(zookeeper_url),
+					-1);
+			}
+
+			else if (zookeeper_code != ZOK)
+			{
+				DBG_WARN("failed to create zookeeper node : %d", zookeeper_code);
+				return NULL;
+			}
+		}
 
 		DBG_INFO(
 		"cpu: %-3s%% | "
