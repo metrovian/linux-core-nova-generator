@@ -142,6 +142,9 @@ static void thread_gateway_zookeeper_watcher(
 			return;
 		}
 
+		if (type == ZOO_CREATED_EVENT) return;
+		if (type == ZOO_DELETED_EVENT) return;
+
 		DBG_WARN("invalid zookeeper event: %d", type);
 		return;
 	}
