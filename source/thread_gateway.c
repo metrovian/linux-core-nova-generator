@@ -338,7 +338,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			snprintf(
 			notice, 
 			sizeof(notice), 
-			"round robin load balancer selected");
+			"round-robin load balancer selected");
 			
 			break;
 		}
@@ -350,7 +350,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			snprintf(
 			notice,
 			sizeof(notice),
-			"least cpu load balancer selected");
+			"least-cpu load balancer selected");
 
 			break;
 		}
@@ -362,7 +362,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			snprintf(
 			notice,
 			sizeof(notice),
-			"least network load balancer selected");
+			"least-network load balancer selected");
 
 			break;
 		}
