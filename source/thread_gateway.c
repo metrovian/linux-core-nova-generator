@@ -229,8 +229,20 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			snprintf(
 			notice, 
 			sizeof(notice), 
-			"round robin selected");
+			"round robin load balancer selected");
 			
+			break;
+		}
+
+		case GATEWAY_LEASTUSER:
+		{
+			rule = GATEWAY_LEASTUSER;
+
+			snprintf(
+			notice,
+			sizeof(notice),
+			"least user load balancer selected");
+
 			break;
 		}
 
