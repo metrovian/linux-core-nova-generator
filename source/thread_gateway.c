@@ -320,6 +320,7 @@ extern void thread_gateway_stop()
 	MHD_stop_daemon(thread_gateway);
 	zookeeper_close(thread_gateway_zookeeper);
 
+	DBG_INFO("zookeeper service terminated");
 	DBG_INFO("gateway thread terminated");
 	return;
 }
