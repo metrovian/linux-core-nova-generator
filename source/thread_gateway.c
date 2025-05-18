@@ -81,7 +81,8 @@ static void thread_gateway_zookeeper_watcher(
 					snprintf(
 					module_name,
 					sizeof(module_name),
-					"/modules/%s",
+					"%s/%s",
+					NET_ZOOKEEPER_NODE,
 					thread_gateway_zookeeper_modules.data[i]);
 
 					zoo_wget(
@@ -155,9 +156,9 @@ static int8_t thread_gateway_zookeeper_connect()
 	
 	thread_gateway_zookeeper = 
 		zookeeper_init(
-		"127.0.0.1:2181", 
+		NET_ZOOKEEPER_LOCAL, 
 		thread_gateway_zookeeper_watcher, 
-		2000, 
+		NET_ZOOKEEPER_TIMEOUT, 
 		0, 
 		0, 
 		0);
@@ -168,7 +169,7 @@ static int8_t thread_gateway_zookeeper_connect()
 		return -1;
 	}
 
-	zoo_get_children(thread_gateway_zookeeper, "/modules", 1, NULL);
+	zoo_get_children(thread_gateway_zookeeper, NET_ZOOKEEPER_NODE, 1, NULL);
 
 	return 0;
 }
@@ -263,7 +264,7 @@ static int32_t thread_gateway_request_handler(
 		MHD_create_response_from_buffer(
 		0, 
 		"", 
-		MHD_RESPMEM_PERSISTENT);
+		NET_GATEWAY_RESPONSE);
 
 	if (!response)
 	{
@@ -291,8 +292,8 @@ extern void thread_gateway_start()
 {	
 	thread_gateway = 
 		MHD_start_daemon(
-		MHD_USE_SELECT_INTERNALLY,
-		80,
+		NET_GATEWAY_MODE,
+		NET_GATEWAY_PORT,
 		NULL,
 		NULL,
 		&thread_gateway_request_handler,
