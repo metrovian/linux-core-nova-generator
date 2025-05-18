@@ -16,7 +16,7 @@ int32_t main(int32_t argc, char *argv[])
 	signal(SIGINT, HANDLE_SIGINT);
 
 	thread_gateway_start();
-	thread_gateway_set_rule(GATEWAY_ROUNDROBIN);
+	thread_gateway_set_rule(GATEWAY_LEASTNETWORK);
 
 	while (main_run);
 	
