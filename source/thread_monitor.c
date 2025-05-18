@@ -98,11 +98,6 @@ static char *thread_monitor_get_ipv4()
 	return ipv4;
 }
 
-static char *thread_monitor_get_user()
-{
-	return "0";
-}
-
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
 	double square = 0;
@@ -364,7 +359,6 @@ extern void *thread_monitor(void *argument)
 			"http://%s",
 			thread_monitor_get_ipv4());
 
-			zookeeper_data.user = atoi(thread_monitor_get_user());
 			zookeeper_data.cpu = atoi(resource_cpu);
 			zookeeper_data.network = atoi(resource_network);
 
