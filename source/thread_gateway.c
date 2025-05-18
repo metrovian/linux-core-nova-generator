@@ -220,12 +220,6 @@ static char *thread_gateway_zookeeper_balance()
 			break;
 		}
 
-		case GATEWAY_LEASTUSER:
-		{
-			balance = thread_gateway_least_user;
-			break;
-		}
-
 		case GATEWAY_LEASTCPU:
 		{
 			balance = thread_gateway_least_cpu;
@@ -338,7 +332,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 	{
 		case GATEWAY_ROUNDROBIN: 
 		{
-			rule = GATEWAY_ROUNDROBIN;
+			thread_gateway_zookeeper_rule = GATEWAY_ROUNDROBIN;
 
 			snprintf(
 			notice, 
@@ -348,21 +342,9 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			break;
 		}
 
-		case GATEWAY_LEASTUSER:
-		{
-			rule = GATEWAY_LEASTUSER;
-
-			snprintf(
-			notice,
-			sizeof(notice),
-			"least user load balancer selected");
-
-			break;
-		}
-
 		case GATEWAY_LEASTCPU:
 		{
-			rule = GATEWAY_LEASTCPU;
+			thread_gateway_zookeeper_rule = GATEWAY_LEASTCPU;
 
 			snprintf(
 			notice,
@@ -374,7 +356,7 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 
 		case GATEWAY_LEASTNETWORK:
 		{
-			rule = GATEWAY_LEASTNETWORK;
+			thread_gateway_zookeeper_rule = GATEWAY_LEASTNETWORK;
 
 			snprintf(
 			notice,

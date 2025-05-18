@@ -8,9 +8,8 @@
 typedef enum
 {
 	GATEWAY_ROUNDROBIN = 0,
-	GATEWAY_LEASTUSER = 1,
-	GATEWAY_LEASTCPU = 2,
-	GATEWAY_LEASTNETWORK = 3,
+	GATEWAY_LEASTCPU = 1,
+	GATEWAY_LEASTNETWORK = 2,
 } thread_gateway_rule;
 
 extern void thread_gateway_start();
