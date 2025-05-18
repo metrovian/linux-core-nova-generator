@@ -18,6 +18,17 @@ extern int32_t zoo_set(
 		int buffer_len,
 		int version);
 
+#pragma pack(push, 1)
+typedef struct
+{
+	char name[256];
+	char url[256];
+	int32_t user;
+	int32_t cpu;
+	int32_t network;
+} thread_monitor_data;
+#pragma pack(pop)
+
 static pthread_mutex_t thread_monitor_audio_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t thread_monitor_codec_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t thread_monitor_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -285,13 +296,23 @@ extern void *thread_monitor(void *argument)
 		pthread_mutex_unlock(&thread_monitor_stream_mutex);
 
 		if (zookeeper_handle)
-		{
-			static char zookeeper_path[256] = "";
-			static char zookeeper_url[256] = "http://192.168.50.100";
-			
-			int32_t zookeeper_code = 0;
+		{	
+			static thread_monitor_data zookeeper_data =
+			{
+				.name = "",
+				.url = "http://192.168.50.100", // TODO: get_ip_address();
+				.user = 0,
+				.cpu = 0,
+				.network = 0
+			};
 
-			if (strlen(zookeeper_path) == 0)
+			zookeeper_data.user = 0; // TODO: get_user_count();
+			zookeeper_data.cpu = atoi(resource_cpu);
+			zookeeper_data.network = 0; // TODO: get_network_tx();
+
+			int32_t zookeeper_code = 0;
+			
+			if (strlen(zookeeper_data.name) == 0)
 			{
 				zookeeper_code =
 					zoo_create(
@@ -308,29 +329,32 @@ extern void *thread_monitor(void *argument)
 					zoo_create(
 					zookeeper_handle,
 					"/modules/module-",
-					zookeeper_url,
-					strlen(zookeeper_url),
+					(char *)(&zookeeper_data),
+					sizeof(zookeeper_data),
 					&ZOO_OPEN_ACL_UNSAFE,
 					ZOO_EPHEMERAL |
 					ZOO_SEQUENCE,
-					zookeeper_path,
-					sizeof(zookeeper_path));
-			}
+					zookeeper_data.name,
+					sizeof(zookeeper_data.name));
 
-			else if (zookeeper_code == ZNODEEXISTS)
-			{
-				zookeeper_code =
-					zoo_set(
-					zookeeper_handle,
-					zookeeper_path,
-					zookeeper_url,
-					strlen(zookeeper_url),
-					-1);
+				if (zookeeper_code != ZOK)
+				{
+					DBG_WARN("failed to create zookeeper node: %d", zookeeper_code);
+					return NULL;
+				}
 			}
+			
+			zookeeper_code =
+				zoo_set(
+				zookeeper_handle,
+				zookeeper_data.name,
+				(char *)(&zookeeper_data),
+				sizeof(zookeeper_data),
+				-1);
 
-			else if (zookeeper_code != ZOK)
+			if (zookeeper_code != ZOK)
 			{
-				DBG_WARN("failed to create zookeeper node : %d", zookeeper_code);
+				DBG_WARN("failed to refresh zookeeper node: %d", zookeeper_code);
 				return NULL;
 			}
 		}
