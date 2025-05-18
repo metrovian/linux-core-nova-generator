@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <zookeeper/zookeeper.h>
 
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples);

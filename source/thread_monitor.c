@@ -64,6 +64,50 @@ static void thread_monitor_zookeeper_watcher(
         return;
 }
 
+static char *thread_monitor_get_ipv4()
+{
+	int32_t fd_socket;
+
+	static char ipv4[INET_ADDRSTRLEN];
+	static char iface[INET_ADDRSTRLEN] = NET_INTERFACE;
+
+	fd_socket = socket(AF_INET, SOCK_DGRAM, 0);
+
+	if (fd_socket == -1)
+	{
+		DBG_WARN("failed to get ipv4 address");
+		return "";
+	}
+
+	struct ifreq ifr;
+
+	strncpy(ifr.ifr_name, iface, IFNAMSIZ - 1);
+	ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+
+	if (ioctl(fd_socket, SIOCGIFADDR, &ifr) == -1)
+	{
+		DBG_WARN("failed to get ipv4 address");
+		return "";
+	}
+	
+	struct sockaddr_in *ipaddr = (struct sockaddr_in *)(&ifr.ifr_addr);
+
+	inet_ntop(AF_INET, &ipaddr->sin_addr, ipv4, INET_ADDRSTRLEN);
+	close(fd_socket);
+
+	return ipv4;
+}
+
+static char *thread_monitor_get_user()
+{
+	return "0";
+}
+
+static char *thread_monitor_get_network()
+{
+	return "0";
+}
+
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
 	double square = 0;
@@ -205,7 +249,7 @@ extern void *thread_monitor(void *argument)
 			zookeeper_init(
 			thread_monitor_zookeeper_path,
 			thread_monitor_zookeeper_watcher,
-			3000,
+			NET_ZOOKEEPER_TIMEOUT,
 			0,
 			0,
 			0);
@@ -300,15 +344,21 @@ extern void *thread_monitor(void *argument)
 			static thread_monitor_data zookeeper_data =
 			{
 				.name = "",
-				.url = "http://192.168.50.100", // TODO: get_ip_address();
+				.url = "",
 				.user = 0,
 				.cpu = 0,
 				.network = 0
 			};
 
-			zookeeper_data.user = 0; // TODO: get_user_count();
+			snprintf(
+			zookeeper_data.url,
+			sizeof(zookeeper_data.url),
+			"http://%s",
+			thread_monitor_get_ipv4());
+
 			zookeeper_data.cpu = atoi(resource_cpu);
-			zookeeper_data.network = 0; // TODO: get_network_tx();
+			zookeeper_data.user = atoi(thread_monitor_get_user());
+			zookeeper_data.network = atoi(thread_monitor_get_network());
 
 			int32_t zookeeper_code = 0;
 			
@@ -317,7 +367,7 @@ extern void *thread_monitor(void *argument)
 				zookeeper_code =
 					zoo_create(
 					zookeeper_handle,
-					"/modules",
+					NET_ZOOKEEPER_NODE,
 					NULL,
 					-1,
 					&ZOO_OPEN_ACL_UNSAFE,
@@ -328,7 +378,7 @@ extern void *thread_monitor(void *argument)
 				zookeeper_code = 
 					zoo_create(
 					zookeeper_handle,
-					"/modules/module-",
+					NET_ZOOKEEPER_NAME,
 					(char *)(&zookeeper_data),
 					sizeof(zookeeper_data),
 					&ZOO_OPEN_ACL_UNSAFE,
