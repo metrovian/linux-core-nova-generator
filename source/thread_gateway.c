@@ -1,13 +1,52 @@
 #include "thread_gateway.h"
 #include "predefined.h"
 
-extern int32_t zoo_get_children(zhandle_t *zh, const char *path, int watch, struct String_vector *strings);
-extern int32_t zoo_get(zhandle_t *zh, const char *path, int watch, char *buffer, int *buffer_len, struct Stat *stat);
+extern int32_t zoo_get_children(
+		zhandle_t *zh, 
+		const char *path, 
+		int watch, 
+		struct String_vector *strings);
+
+extern int32_t zoo_get(
+		zhandle_t *zh, 
+		const char *path, 
+		int watch, 
+		char *buffer, 
+		int *buffer_len, 
+		struct Stat *stat);
+
+extern int32_t zoo_wget(
+		zhandle_t *zh, 
+		const char *path, 
+		watcher_fn watcher, 
+		void *watcher_ctx, 
+		char *buffer, 
+		int *buffer_len, 
+		struct Stat *stat);
+
+#pragma pack(push, 1)
+typedef struct
+{
+	char name[256];
+	char url[256];
+	int32_t user;
+	int32_t cpu;
+	int32_t network;
+} thread_gateway_data;
+#pragma pack(pop)
 
 static struct MHD_Daemon *thread_gateway = NULL;
 static struct zhandle_t *thread_gateway_zookeeper = NULL;
 
+static struct String_vector thread_gateway_zookeeper_modules;
+
 static thread_gateway_rule thread_gateway_zookeeper_rule = GATEWAY_ROUNDROBIN;
+static thread_gateway_data thread_gateway_zookeeper_data[32];
+
+static int32_t thread_gateway_round_robin = 0;
+static int32_t thread_gateway_least_user = 0;
+static int32_t thread_gateway_least_cpu = 0;
+static int32_t thread_gateway_least_network = 0;
 
 static void thread_gateway_zookeeper_watcher(
 		zhandle_t *handle,
@@ -18,19 +57,42 @@ static void thread_gateway_zookeeper_watcher(
 {
 	if (state == ZOO_CONNECTED_STATE) 
 	{
-		if (type == ZOO_CHILD_EVENT)
-		{
-			static struct String_vector modules;
+		static int modules_now = 0;
+		static int modules_prev = 0;
 			
-			static int modules_now = 0;
-			static int modules_prev = 0;
+		static char module_name[256];
+		static int module_size = sizeof(thread_gateway_data);
+			
+		if (type == ZOO_CHILD_EVENT)
+		{	
+			zoo_get_children(
+			handle, 
+			path, 
+			1, 
+			&thread_gateway_zookeeper_modules);
 
-			zoo_get_children(handle, path, 1, &modules);
-
-			if (modules.count != modules_now)
+			if (thread_gateway_zookeeper_modules.count != modules_now)
 			{
 				modules_prev = modules_now;
-				modules_now = modules.count;
+				modules_now = thread_gateway_zookeeper_modules.count;
+				
+				for (int32_t i = 0; i < modules_now; ++i)
+				{
+					snprintf(
+					module_name,
+					sizeof(module_name),
+					"/modules/%s",
+					thread_gateway_zookeeper_modules.data[i]);
+
+					zoo_wget(
+					handle, 
+					module_name, 
+					thread_gateway_zookeeper_watcher,
+					NULL,	
+					(char *)(&thread_gateway_zookeeper_data[i]), 
+					&module_size, 
+					NULL);
+				}
 
 				if (modules_now > modules_prev)
 				{
@@ -44,15 +106,46 @@ static void thread_gateway_zookeeper_watcher(
 					return;
 				}
 			}
-			
-			return;
+		}
+
+		if (type == ZOO_CHANGED_EVENT)
+		{
+			int32_t event_index = 0;
+
+			for (event_index = 0; event_index < modules_now; ++event_index)
+			{	
+				if (strncmp(
+					thread_gateway_zookeeper_data[event_index].name, 
+					path, 
+					sizeof(thread_gateway_zookeeper_data[event_index].name)) == 0)
+				{
+					break;
+				}
+			}
+
+			zoo_wget(
+			handle, 
+			path, 
+			thread_gateway_zookeeper_watcher,
+			NULL,	
+			(char *)&thread_gateway_zookeeper_data[event_index], 
+			&module_size, 
+			NULL);
+
+			return;	
 		}
 		
-		DBG_INFO("zookeeper service started");
+		if (type == ZOO_SESSION_EVENT)
+		{
+			DBG_INFO("zookeeper service started");
+			return;
+		}
+
+		DBG_WARN("invalid zookeeper event: %d", type);
 		return;
 	}
 
-	DBG_WARN("invalid zookeeper state");
+	DBG_WARN("invalid zookeeper state: %d", state);
 	return;
 }
 
@@ -82,33 +175,62 @@ static int8_t thread_gateway_zookeeper_connect()
 
 static char *thread_gateway_zookeeper_balance()
 {	
-	static struct String_vector modules;
-
-	if (zoo_get_children(thread_gateway_zookeeper, "/modules", 0, &modules) != ZOK)
-	{
-		DBG_WARN("failed to get proper modules");
-		return "";
-	}
-
-	if (modules.count < 0)
+	if (thread_gateway_zookeeper_modules.count < 0)
 	{
 		DBG_WARN("failed to get proper module");
 		return "";
 	}
 
 	static int balance = 0;
-	static int balance_size = 256;
 
-	static char balance_module[256];
-	static char balance_url[256];
+	int32_t user = INT32_MAX;
+	int32_t cpu = INT32_MAX;
+	int32_t network = INT32_MAX;
+
+	for (int32_t i = 0; i < thread_gateway_zookeeper_modules.count; ++i)
+	{
+		if (user > thread_gateway_zookeeper_data[i].user)
+		{
+			user = thread_gateway_zookeeper_data[i].user;
+			thread_gateway_least_user = i;
+		}
+
+		if (cpu > thread_gateway_zookeeper_data[i].cpu)
+		{
+			cpu = thread_gateway_zookeeper_data[i].cpu;
+			thread_gateway_least_cpu = i;
+		}
+
+		if (network > thread_gateway_zookeeper_data[i].network)
+		{
+			network = thread_gateway_zookeeper_data[i].network;
+			thread_gateway_least_network = i;
+		}
+	}
 
 	switch (thread_gateway_zookeeper_rule)
 	{
 		case GATEWAY_ROUNDROBIN:
 		{
-			static int32_t roundrobin_turn = 0;
-			
-			balance = roundrobin_turn++ % modules.count;
+			balance = thread_gateway_round_robin++ % thread_gateway_zookeeper_modules.count;
+			break;
+		}
+
+		case GATEWAY_LEASTUSER:
+		{
+			balance = thread_gateway_least_user;
+			break;
+		}
+
+		case GATEWAY_LEASTCPU:
+		{
+			balance = thread_gateway_least_cpu;
+			break;
+		}
+
+		case GATEWAY_LEASTNETWORK:
+		{
+			balance = thread_gateway_least_network;
 			break;
 		}
 
@@ -119,19 +241,7 @@ static char *thread_gateway_zookeeper_balance()
 		}
 	}
 
-	snprintf(
-	balance_module,
-	sizeof(balance_module),
-	"/modules/%s",
-	modules.data[balance]);
-
-	if (zoo_get(thread_gateway_zookeeper, balance_module, 0, balance_url, &balance_size, NULL) < 0)
-	{
-		DBG_WARN("failed to get proper module url");
-		return "";
-	}
-	
-	return balance_url;
+	return thread_gateway_zookeeper_data[balance].url;
 }
 
 static int32_t thread_gateway_request_handler(
@@ -242,6 +352,30 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule)
 			notice,
 			sizeof(notice),
 			"least user load balancer selected");
+
+			break;
+		}
+
+		case GATEWAY_LEASTCPU:
+		{
+			rule = GATEWAY_LEASTCPU;
+
+			snprintf(
+			notice,
+			sizeof(notice),
+			"least cpu load balancer selected");
+
+			break;
+		}
+
+		case GATEWAY_LEASTNETWORK:
+		{
+			rule = GATEWAY_LEASTNETWORK;
+
+			snprintf(
+			notice,
+			sizeof(notice),
+			"least network load balancer selected");
 
 			break;
 		}
