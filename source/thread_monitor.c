@@ -187,9 +187,9 @@ extern void *thread_monitor(void *argument)
 	char command_memory[512];
 	char command_network[512];
 
-	char resource_cpu[32];
-	char resource_memory[32];
-	char resource_network[32];
+	char resource_cpu[32] = "0";
+	char resource_memory[32] = "0";
+	char resource_network[32] = "0";
 
 	int32_t audio_volume = 0;
 	int32_t codec_bitrate = 0;
@@ -208,7 +208,7 @@ extern void *thread_monitor(void *argument)
 	"grep 'Average' | "
 	"awk '{print int(100-$12)}' | "
 	"tr -d '\n'",
-	SYS_MONITOR_INTERVALS / 1000);
+	SYS_MONITOR_INTERVALS / 3000);
 
 	if (strlen(thread_monitor_resource_path))
 	{
@@ -237,9 +237,10 @@ extern void *thread_monitor(void *argument)
 	snprintf(
 	command_network,
 	sizeof(command_network),
-	"ifstat -i %s 1 1 | "
+	"ifstat -i %s %d 1 | "
 	"awk 'NR==3 {print $2}'",
-	NET_INTERFACE);
+	NET_INTERFACE,
+	SYS_MONITOR_INTERVALS / 3000);
 
 	if (strlen(thread_monitor_zookeeper_path) > 0)
 	{
@@ -294,7 +295,7 @@ extern void *thread_monitor(void *argument)
 		while (thread_monitor_run)
 		{
 			usleep(SYS_MONITOR_TIMES);
-
+			
 			clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_end);
 			
 			time_interval_sec = thread_monitor_clock_end.tv_sec - thread_monitor_clock_start.tv_sec;
