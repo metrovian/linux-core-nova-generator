@@ -6,7 +6,6 @@ static int8_t main_run = 1;
 void HANDLE_SIGINT(int32_t signal)
 {
         main_run = 0;
-	thread_gateway_stop();
 
         DBG_WARN("SIGINT");
         return;
@@ -20,6 +19,8 @@ int32_t main(int32_t argc, char *argv[])
 	thread_gateway_set_rule(GATEWAY_ROUNDROBIN);
 
 	while (main_run);
+	
+	thread_gateway_stop();
 	
 	return 0;
 }
