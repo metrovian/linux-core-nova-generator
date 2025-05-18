@@ -1,0 +1,193 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Apache ZooKeeper
+Source: https://zookeeper.apache.org/
+
+Files: *
+Copyright: 2009-2022 The Apache Software Foundation
+License: Apache-2.0
+
+Files: zookeeper-client/zookeeper-client-c/INSTALL
+       zookeeper-recipes/zookeeper-recipes-lock/src/main/c/INSTALL
+       zookeeper-recipes/zookeeper-recipes-queue/src/main/c/INSTALL
+Copyright: 1994-2006 Free Software Foundation, Inc.
+License: FSFUL
+
+Files: zookeeper-client/zookeeper-client-c/acinclude.m4
+       zookeeper-client/zookeeper-client-c/aminclude.am
+       zookeeper-recipes/zookeeper-recipes-lock/src/main/c/acinclude.m4
+       zookeeper-recipes/zookeeper-recipes-lock/src/main/c/aminclude.am
+       zookeeper-recipes/zookeeper-recipes-queue/src/main/c/acinclude.m4
+       zookeeper-recipes/zookeeper-recipes-queue/src/main/c/aminclude.am
+Copyright: 2004 Oren Ben-Kiki
+License: GPL-3+
+Comment: the headers state the license is the same as the one of the Autoconf
+ macros, i.e. GPL-3+.
+
+Files: zookeeper-client/zookeeper-client-c/include/win_getopt.h
+Copyright: 2000 The NetBSD Foundation, Inc.
+           2002 Todd C. Miller <Todd.Miller@courtesan.com>
+           2009-2022 The Apache Software Foundation
+License: BSD-2-Clause and ISC and Apache-2.0
+
+Files: zookeeper-client/zookeeper-client-c/src/hashtable/*
+Copyright: 2002-2004 Christopher Clark <firstname.lastname@cl.cam.ac.uk>
+License: BSD-3-Clause
+
+Files: zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/date.format.js
+Copyright: 2007-2009 Steven Levithan <stevenlevithan.com>
+License: Expat
+
+Files: zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/g.bar.js
+       zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/g.dot.js
+       zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/g.line.js
+       zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/g.pie.js
+       zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/g.raphael.js
+       zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/raphael.js
+Copyright: 2009 Dmitry Baranovskiy (http://g.raphaeljs.com)
+License: Expat
+
+Files: zookeeper-contrib/zookeeper-contrib-loggraph/src/main/resources/webapp/org/apache/zookeeper/graph/resources/yui-min.js
+Copyright: 2010 Yahoo! Inc.
+License: BSD-3-Clause
+
+Files: zookeeper-contrib/zookeeper-contrib-zkperl/*
+Copyright: 2009 The Apache Software Foundation
+License: Apache-2.0
+
+Files: zookeeper-contrib/zookeeper-contrib-zooinspector/src/main/java/com/nitido/utils/toaster/Toaster.java
+Copyright: Daniele Piras ("danielepiras80", no email known)
+License: Apache-2.0
+
+Files: zookeeper-docs/*
+Copyright: 2002-2022 The Apache Software Foundation
+License: Apache-2.0
+
+Files: zookeeper-docs/src/main/resources/markdown/skin/prototype.js
+Copyright: 2005-2010 Sam Stephenson
+License: Expat
+
+Files: debian/*
+Copyright: 2010 Thomas Koch <thomas.koch@ymc.ch>,
+           2011 Canonical Ltd (http://www.canonical.com)
+           2015-2019 tony mancill <tmancill@debian.org>
+           2022 Pierre Gruet <pgt@debian.org>
+License: Apache-2.0
+
+Files: debian/patches/01-add-jtoaster-to-zooinspector.patch
+Copyright: Daniele Piras ("danielepiras80", no email)
+License: Apache-2.0
+
+Files: debian/bin/zkPurgeTxnLog.sh
+Copyright: 2004 Sam Hocevar
+License: WTFPL-2
+
+License: Apache-2.0
+ On Debian systems the full text of the Apache-2.0 license can be found in
+ /usr/share/common-licenses/Apache-2.0.
+
+License: FSFUL
+ This configure script is free software; the Free Software Foundation gives
+ unlimited permission to copy, distribute and modify it.
+
+License: GPL-3+
+ On Debian systems the full text of the GPL-3 can be found in
+ /usr/share/common-licenses/GPL-3
+
+License: BSD-2-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+ .
+   Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: ISC
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
+ DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
+ INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+ FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+License: BSD-3-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ * Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+ .
+ * Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+ .
+ * Neither the name of the original author; nor the names of any contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to
+ deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+License: WTFPL-2
+ DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ Version 2, December 2004
+ .
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+ .
+           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+ .
+ 0. You just DO WHAT THE FUCK YOU WANT TO.
