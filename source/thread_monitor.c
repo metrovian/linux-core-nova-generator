@@ -103,11 +103,6 @@ static char *thread_monitor_get_user()
 	return "0";
 }
 
-static char *thread_monitor_get_network()
-{
-	return "0";
-}
-
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples)
 {
 	double square = 0;
@@ -191,12 +186,15 @@ extern void *thread_monitor(void *argument)
 {	
 	FILE *stream_cpu = NULL;
 	FILE *stream_memory = NULL;
+	FILE *stream_network = NULL;
 
 	char command_cpu[512];
 	char command_memory[512];
+	char command_network[512];
 
 	char resource_cpu[32];
 	char resource_memory[32];
+	char resource_network[32];
 
 	int32_t audio_volume = 0;
 	int32_t codec_bitrate = 0;
@@ -241,6 +239,13 @@ extern void *thread_monitor(void *argument)
 		"tr -d '\n'");	
 	}
 
+	snprintf(
+	command_network,
+	sizeof(command_network),
+	"ifstat -i %s 1 1 | "
+	"awk 'NR==3 {print $2}'",
+	NET_INTERFACE);
+
 	if (strlen(thread_monitor_zookeeper_path) > 0)
 	{
 		zoo_set_debug_level(ZOO_LOG_LEVEL_ERROR);
@@ -269,6 +274,7 @@ extern void *thread_monitor(void *argument)
 		
 		stream_cpu = popen(command_cpu, "r");
 		stream_memory = popen(command_memory, "r");
+		stream_network = popen(command_network, "r");
 		
 		if (!stream_cpu)
 		{
@@ -284,10 +290,12 @@ extern void *thread_monitor(void *argument)
 		
 		fgets(resource_cpu, sizeof(resource_cpu), stream_cpu);
 		fgets(resource_memory, sizeof(resource_memory), stream_memory);
+		fgets(resource_network, sizeof(resource_network), stream_network);
 
 		pclose(stream_cpu);
 		pclose(stream_memory);
-	
+		pclose(stream_network);
+
 		while (thread_monitor_run)
 		{
 			usleep(SYS_MONITOR_TIMES);
@@ -356,9 +364,9 @@ extern void *thread_monitor(void *argument)
 			"http://%s",
 			thread_monitor_get_ipv4());
 
-			zookeeper_data.cpu = atoi(resource_cpu);
 			zookeeper_data.user = atoi(thread_monitor_get_user());
-			zookeeper_data.network = atoi(thread_monitor_get_network());
+			zookeeper_data.cpu = atoi(resource_cpu);
+			zookeeper_data.network = atoi(resource_network);
 
 			int32_t zookeeper_code = 0;
 			
