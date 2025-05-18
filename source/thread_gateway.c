@@ -18,7 +18,37 @@ static void thread_gateway_zookeeper_watcher(
 {
 	if (state == ZOO_CONNECTED_STATE) 
 	{
-		DBG_INFO("zookeeper service connected");
+		if (type == ZOO_CHILD_EVENT)
+		{
+			static struct String_vector modules;
+			
+			static int modules_now = 0;
+			static int modules_prev = 0;
+
+			zoo_get_children(handle, path, 1, &modules);
+
+			if (modules.count != modules_now)
+			{
+				modules_prev = modules_now;
+				modules_now = modules.count;
+
+				if (modules_now > modules_prev)
+				{
+					DBG_INFO("zookeeper module connected: %d", modules_now);
+					return;
+				}
+
+				else
+				{
+					DBG_INFO("zookeeper module disconnected: %d", modules_now);
+					return;
+				}
+			}
+			
+			return;
+		}
+		
+		DBG_INFO("zookeeper service started");
 		return;
 	}
 
@@ -44,6 +74,8 @@ static int8_t thread_gateway_zookeeper_connect()
 		DBG_WARN("failed to connect zookeeper service");
 		return -1;
 	}
+
+	zoo_get_children(thread_gateway_zookeeper, "/modules", 1, NULL);
 
 	return 0;
 }
