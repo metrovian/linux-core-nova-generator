@@ -129,7 +129,7 @@ static void thread_gateway_zookeeper_watcher(
 			path, 
 			thread_gateway_zookeeper_watcher,
 			NULL,	
-			(char *)&thread_gateway_zookeeper_data[event_index], 
+			(char *)(&thread_gateway_zookeeper_data[event_index]), 
 			&module_size, 
 			NULL);
 
