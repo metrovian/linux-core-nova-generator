@@ -23,16 +23,21 @@ int32_t main(int32_t argc, char *argv[])
 
 	char path_hls[256];
 	char path_zk[256];
+	char path_kafka[256];
 
-	if (argc == 1 || argc == 2 || argc == 3)
+	if (argc == 1 || argc == 2)
 	{
 		pthread_create(&pthread_producer, NULL, thread_producer_aac, NULL);
 			
 		strncpy(path_hls, "/var/www/hls", sizeof(path_hls));
 		strncpy(path_zk, "", sizeof(path_zk));
+		strncpy(path_kafka, "", sizeof(path_kafka));
 
-		if (argc == 2) strncpy(path_zk, argv[1], sizeof(path_zk));
-		if (argc == 3) strncpy(path_hls, argv[2], sizeof(path_hls));
+		if (argc == 2) 
+		{
+			snprintf(path_zk, sizeof(path_zk), "%s:%d", argv[1], NET_ZOOKEEPER_PORT);
+			snprintf(path_kafka, sizeof(path_kafka), "%s:%d", argv[1], NET_KAFKA_PORT);
+		}
 	}
 
 	else
