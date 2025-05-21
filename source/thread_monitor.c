@@ -38,6 +38,7 @@ static struct timespec thread_monitor_clock_end;
 
 static char thread_monitor_resource_path[256];
 static char thread_monitor_zookeeper_path[256];
+static char thread_monitor_kafka_path[256];
 
 static int8_t thread_monitor_run = 0;
 static int32_t thread_monitor_audio_volume = 0;
@@ -56,12 +57,25 @@ static void thread_monitor_zookeeper_watcher(
 {
         if (state == ZOO_CONNECTED_STATE)
         {
-                DBG_INFO("zookeeper service started");
                 return;
         }
 
         DBG_WARN("invalid zookeeper state");
         return;
+}
+
+static void thread_monitor_kafka_watcher(
+		rd_kafka_t *handle,
+		const rd_kafka_message_t *message,
+		void *opaque)
+{
+	if (message->err)
+	{
+		DBG_WARN("failed to deliver: %s\n", rd_kafka_message_errstr(message));
+		return;
+	}
+	
+	return;
 }
 
 static char *thread_monitor_get_ipv4()
@@ -159,10 +173,17 @@ extern void thread_monitor_zookeeper_gateway(const char *path)
 	return;
 }
 
+extern void thread_monitor_kafka_gateway(const char *path)
+{
+	strncpy(thread_monitor_kafka_path, path, sizeof(thread_monitor_kafka_path));
+
+	return;
+}
+
 extern void thread_monitor_start()
 {
 	thread_monitor_run = 1;
-
+	
 	pthread_t monitor;
 	pthread_create(&monitor, NULL, thread_monitor, NULL);	
 	pthread_detach(monitor);
@@ -190,6 +211,7 @@ extern void *thread_monitor(void *argument)
 	char resource_cpu[32] = "0";
 	char resource_memory[32] = "0";
 	char resource_network[32] = "0";
+	char resource_json[256] = "0";
 
 	int32_t audio_volume = 0;
 	int32_t codec_bitrate = 0;
@@ -200,6 +222,8 @@ extern void *thread_monitor(void *argument)
 	time_t time_interval_nsec = 0;	
 
 	zhandle_t *zookeeper_handle = NULL;
+	rd_kafka_t *kafka_handle = NULL;
+	rd_kafka_conf_t *kafka_conf = NULL;
 
 	snprintf(
 	command_cpu,
@@ -260,6 +284,44 @@ extern void *thread_monitor(void *argument)
 			DBG_WARN("failed to connect zookeeper service");
 			return NULL;
 		}
+
+		DBG_INFO("zookeeper service started");
+	}
+
+	if (strlen(thread_monitor_kafka_path) > 0)
+	{
+		kafka_conf = rd_kafka_conf_new();
+
+		rd_kafka_conf_set_dr_msg_cb(
+		kafka_conf, 
+		thread_monitor_kafka_watcher);
+
+		char kafka_error[512];
+
+		if (rd_kafka_conf_set(
+			kafka_conf, 
+			"bootstrap.servers",
+			thread_monitor_kafka_path,
+			kafka_error,
+			sizeof(kafka_error) != RD_KAFKA_CONF_OK))
+		{
+			DBG_WARN("failed to connnect kafka service");
+			return NULL;
+		}
+
+		kafka_handle = 
+			rd_kafka_new(
+			RD_KAFKA_PRODUCER,
+			kafka_conf,
+			kafka_error,
+			sizeof(kafka_error));
+
+		if (!kafka_handle)
+		{
+			DBG_WARN("failed to create kafka producer");
+		}
+		
+		DBG_INFO("kafka service started");
 	}
 
 	DBG_INFO("monitor thread started");
@@ -412,6 +474,40 @@ extern void *thread_monitor(void *argument)
 			}
 		}
 
+		if (kafka_handle)
+		{
+			snprintf(
+			resource_json,
+			sizeof(resource_json),
+			"{"
+			"\"cpu\": %s,"
+			"\"mem\": %s,"
+			"\"rec\": %d,"
+			"\"enc\": %d,"
+			"\"str\": %d"
+			"}",
+			resource_cpu,
+			resource_memory,
+			audio_volume,
+			codec_bitrate,
+			stream_bitrate);
+
+			rd_kafka_resp_err_t kafka_resp =
+				rd_kafka_producev(
+				kafka_handle,
+				RD_KAFKA_V_TOPIC(NET_KAFKA_TOPIC),
+				RD_KAFKA_V_VALUE(resource_json, strlen(resource_json)),
+				RD_KAFKA_V_END);
+
+			if (kafka_resp != RD_KAFKA_RESP_ERR_NO_ERROR)
+			{
+				DBG_WARN("failed to produce kafka stream");
+				return NULL;
+			}
+
+			rd_kafka_poll(kafka_handle, 0);
+		}
+
 		DBG_INFO(
 		"cpu: %-3s%% | "
 		"mem: %-3s%% | "
@@ -430,6 +526,14 @@ extern void *thread_monitor(void *argument)
 		zookeeper_close(zookeeper_handle);
 
 		DBG_INFO("zookeeper service terminated");
+	}
+
+	if (strlen(thread_monitor_kafka_path) > 0)
+	{
+		rd_kafka_flush(kafka_handle, NET_KAFKA_TIMEOUT);
+		rd_kafka_destroy(kafka_handle);
+		
+		DBG_INFO("kafka service terminated");
 	}
 
 	DBG_INFO("monitor thread terminated");
