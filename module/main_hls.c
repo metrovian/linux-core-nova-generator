@@ -23,7 +23,7 @@ int32_t main(int32_t argc, char *argv[])
 
 	char path_hls[256];
 	char path_zk[256];
-	char path_kafka[256];
+	char path_kf[256];
 
 	if (argc == 1 || argc == 2)
 	{
@@ -31,12 +31,12 @@ int32_t main(int32_t argc, char *argv[])
 			
 		strncpy(path_hls, "/var/www/hls", sizeof(path_hls));
 		strncpy(path_zk, "", sizeof(path_zk));
-		strncpy(path_kafka, "", sizeof(path_kafka));
+		strncpy(path_kf, "", sizeof(path_kf));
 
 		if (argc == 2) 
 		{
 			snprintf(path_zk, sizeof(path_zk), "%s:%d", argv[1], NET_ZOOKEEPER_PORT);
-			snprintf(path_kafka, sizeof(path_kafka), "%s:%d", argv[1], NET_KAFKA_PORT);
+			snprintf(path_kf, sizeof(path_kf), "%s:%d", argv[1], NET_KAFKA_PORT);
 		}
 	}
 
@@ -52,7 +52,8 @@ int32_t main(int32_t argc, char *argv[])
 
 	thread_monitor_resource_ramdisk(path_hls);
 	thread_monitor_zookeeper_gateway(path_zk);
-	
+	thread_monitor_kafka_gateway(path_kf);
+
 	thread_monitor_start();
 	
 	while (g_thread_producer);
