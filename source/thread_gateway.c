@@ -249,6 +249,13 @@ static int8_t thread_gateway_kafka_connect()
 	
 	char kafka_error[512];
 	
+	rd_kafka_conf_set(
+	kafka_conf,
+	"bootstrap.servers",
+	"localhost:9092",
+	kafka_error,
+	sizeof(kafka_error));
+	
 	thread_gateway_kafka = 
 		rd_kafka_new(
 		RD_KAFKA_CONSUMER,
