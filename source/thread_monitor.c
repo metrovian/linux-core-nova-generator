@@ -479,13 +479,11 @@ extern void *thread_monitor(void *argument)
 			snprintf(
 			resource_json,
 			sizeof(resource_json),
-			"{"
-			"\"cpu\": %s,"
-			"\"mem\": %s,"
-			"\"rec\": %d,"
-			"\"enc\": %d,"
-			"\"str\": %d"
-			"}",
+			"cpu %s\n"
+			"mem %s\n"
+			"rec %d\n"
+			"enc %d\n"
+			"str %d\n",
 			resource_cpu,
 			resource_memory,
 			audio_volume,
