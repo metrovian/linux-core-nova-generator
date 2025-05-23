@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-typedef struct
-{
+typedef struct {
 	int8_t *data;
 	int32_t *packets;
 	int32_t capacity;

@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #pragma pack(push, 1)
-typedef struct
-{
+typedef struct {
 	int8_t riff_id[4];
 	int32_t riff_size;
 	int8_t wave_id[4];

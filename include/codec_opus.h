@@ -1,8 +1,7 @@
 #pragma once
 #include <opus/opus.h>
 
-typedef struct
-{
+typedef struct {
 	OpusEncoder *encoder;
 	OpusDecoder *decoder;
 } codec_opus;

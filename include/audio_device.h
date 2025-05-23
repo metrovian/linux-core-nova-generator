@@ -1,8 +1,7 @@
 #pragma once
 #include <alsa/asoundlib.h>
 
-typedef struct
-{
+typedef struct {
 	snd_pcm_t *handle;
 	snd_pcm_hw_params_t *params;
 } audio_device;

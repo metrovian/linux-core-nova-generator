@@ -8,8 +8,7 @@
 #include "stream_dash.h"
 #include "stream_janus.h"
 
-typedef enum
-{
+typedef enum {
 	CONSUMER_NONE = 0,
 	CONSUMER_PLAYBACK = 1,
 	CONSUMER_TRANSMISSION_HLS = 2,

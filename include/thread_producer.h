@@ -5,8 +5,7 @@
 #include "codec_opus.h"
 #include "codec_queue.h"
 
-typedef enum
-{
+typedef enum {
 	PRODUCER_NONE = 0,
 	PRODUCER_RAW = 1,
 	PRODUCER_AAC = 2,
