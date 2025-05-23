@@ -22,4 +22,3 @@ extern codec_queue *codec_queue_create(int32_t cocap);
 extern void codec_queue_destroy(codec_queue *coque);
 extern void codec_queue_push(codec_queue *coque, int8_t *coptr, int32_t *push_payloads);
 extern void codec_queue_pop(codec_queue *coque, int8_t *coptr, int32_t *pop_payloads);
-

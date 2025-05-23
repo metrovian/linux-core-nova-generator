@@ -23,4 +23,3 @@ extern void *thread_consumer_playback(void *argument);
 extern void *thread_consumer_transmission_hls(void *argument);
 extern void *thread_consumer_transmission_dash(void *argument);
 extern void *thread_consumer_transmission_janus(void *argument);
-

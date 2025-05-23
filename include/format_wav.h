@@ -24,4 +24,3 @@ typedef struct {
 
 extern int8_t format_wav_read_file(const char *name, int16_t **auptr, int16_t *channels, int32_t *sample_rate, int32_t *read_frames);
 extern int8_t format_wav_write_file(const char *name, int16_t **auptr, int16_t *channels, int32_t *sample_rate, int32_t *write_frames);
-

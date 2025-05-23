@@ -1,3 +1,4 @@
+// clang-format off
 #pragma once
 #include <assert.h>
 #include <unistd.h>
@@ -58,4 +59,4 @@
 #define DBG_INFO(message, ...) fprintf(stderr, INFO "[%s:%d] " RESET message "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
 #define CREATE(structure) (structure *)malloc(sizeof(structure))
-
+// clang-format on

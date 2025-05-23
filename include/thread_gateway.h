@@ -20,4 +20,3 @@ typedef enum {
 extern void thread_gateway_start();
 extern void thread_gateway_stop();
 extern void thread_gateway_set_rule(thread_gateway_rule rule);
-
