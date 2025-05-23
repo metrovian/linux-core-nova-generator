@@ -38,7 +38,6 @@
 </head>
 <body>
 	<h1>Nova Generator</h1>
-
 	<div class="audio-container">
 		<audio
 			id="audio-player"
@@ -48,12 +47,9 @@
 			<source src="/hls/stream.m3u8" type="application/x-mpegURL"/>
 		</audio>
 	</div>
-
-	<script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0"></script>
 	<script>
 		const audio = document.getElementById('audio-player');
-
 		if (Hls.isSupported()) {
 			const hls = new Hls();
 			hls.loadSource('/hls/stream.m3u8');
