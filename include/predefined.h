@@ -21,7 +21,8 @@
 #define NET_ZOOKEEPER_NAME	"/modules/module-"
 #define NET_ZOOKEEPER_PORT	2181
 #define NET_ZOOKEEPER_TIMEOUT	3000
-#define NET_KAFKA_LOCAL		"localhost:9092"
+#define NET_KAFKA_LOCAL		"localhost:9094"
+#define NET_KAFKA_PUSHGATE	"localhost:9095/metrics/job/resource"
 #define NET_KAFKA_TOPIC		"resource"
 #define NET_KAFKA_PORT		9092
 #define NET_KAFKA_TIMEOUT	3000
