@@ -252,7 +252,14 @@ static int8_t thread_gateway_kafka_connect()
 	rd_kafka_conf_set(
 	kafka_conf,
 	"bootstrap.servers",
-	"localhost:9092",
+	NET_KAFKA_LOCAL,
+	kafka_error,
+	sizeof(kafka_error));
+
+	rd_kafka_conf_set(
+	kafka_conf,
+	"group.id",
+	"resource-monitor",
 	kafka_error,
 	sizeof(kafka_error));
 	
@@ -282,14 +289,12 @@ static int8_t thread_gateway_kafka_connect()
 
 static void *thread_gateway_kafka_prometheus(void *argument)
 {
-	CURL *curl = curl_easy_init();
-
 	while (thread_gateway_kafka)
 	{
 		rd_kafka_message_t *kafka_message =
 			rd_kafka_consumer_poll(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
 
-		if (!kafka_message)
+		if (kafka_message)
 		{
 			if (kafka_message->err)
 			{
@@ -301,10 +306,12 @@ static void *thread_gateway_kafka_prometheus(void *argument)
 			
 			if (kafka_message->len > 0)
 			{
+				CURL *curl = curl_easy_init();
+
 				curl_easy_setopt(
 				curl, 
 				CURLOPT_URL, 
-				"http://localhost:9091/metrics/job/resource");
+				NET_KAFKA_PUSHGATE);
 
 				curl_easy_setopt(
 				curl,
@@ -319,9 +326,9 @@ static void *thread_gateway_kafka_prometheus(void *argument)
 				curl_easy_perform(curl);
 				curl_easy_cleanup(curl);
 			}
-		}
 
-		rd_kafka_message_destroy(kafka_message);
+			rd_kafka_message_destroy(kafka_message);
+		}
 	}
 
 	DBG_WARN("kafka service terminated");
