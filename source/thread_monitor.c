@@ -1,5 +1,6 @@
 #include "thread_monitor.h"
 #include "predefined.h"
+#include "preshared.h"
 
 extern int32_t zoo_create(
     zhandle_t *zh,
@@ -17,17 +18,6 @@ extern int32_t zoo_set(
     const char *buffer,
     int buffer_len,
     int version);
-
-#pragma pack(push, 1)
-typedef struct
-{
-	char name[256];
-	char url[256];
-	int32_t user;
-	int32_t cpu;
-	int32_t network;
-} thread_monitor_data;
-#pragma pack(pop)
 
 static pthread_mutex_t thread_monitor_audio_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t thread_monitor_codec_mutex = PTHREAD_MUTEX_INITIALIZER;

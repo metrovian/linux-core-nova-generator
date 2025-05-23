@@ -1,5 +1,6 @@
 #include "thread_gateway.h"
 #include "predefined.h"
+#include "preshared.h"
 
 extern int32_t zoo_get_children(
     zhandle_t *zh,
@@ -23,17 +24,6 @@ extern int32_t zoo_wget(
     char *buffer,
     int *buffer_len,
     struct Stat *stat);
-
-#pragma pack(push, 1)
-typedef struct
-{
-	char name[256];
-	char url[256];
-	int32_t user;
-	int32_t cpu;
-	int32_t network;
-} thread_gateway_data;
-#pragma pack(pop)
 
 static struct MHD_Daemon *thread_gateway = NULL;
 static struct zhandle_t *thread_gateway_zookeeper = NULL;
