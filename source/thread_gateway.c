@@ -130,8 +130,8 @@ static int8_t thread_gateway_zookeeper_connect() {
 		NET_ZOOKEEPER_LOCAL,
 		thread_gateway_zookeeper_watcher,
 		NET_ZOOKEEPER_TIMEOUT,
-		0,
-		0,
+		NULL,
+		NULL,
 		0);
 
 	if (!thread_gateway_zookeeper) {
@@ -203,6 +203,13 @@ static int8_t thread_gateway_kafka_connect() {
 
 	rd_kafka_conf_set(
 	    kafka_conf,
+	    "log_level",
+	    "0",
+	    kafka_error,
+	    sizeof(kafka_error));
+
+	rd_kafka_conf_set(
+	    kafka_conf,
 	    "bootstrap.servers",
 	    NET_KAFKA_LOCAL,
 	    kafka_error,
@@ -212,13 +219,6 @@ static int8_t thread_gateway_kafka_connect() {
 	    kafka_conf,
 	    "group.id",
 	    "resource-monitor",
-	    kafka_error,
-	    sizeof(kafka_error));
-
-	rd_kafka_conf_set(
-	    kafka_conf,
-	    "log_level",
-	    "0",
 	    kafka_error,
 	    sizeof(kafka_error));
 
