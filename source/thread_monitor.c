@@ -225,6 +225,13 @@ extern void *thread_monitor(void *argument) {
 	if (strlen(thread_monitor_kafka_path) > 0) {
 		rd_kafka_conf_t *kafka_conf = rd_kafka_conf_new();
 		rd_kafka_conf_set_dr_msg_cb(kafka_conf, thread_monitor_kafka_watcher);
+		rd_kafka_conf_set(
+		    kafka_conf,
+		    "log_level",
+		    "0",
+		    kafka_error,
+		    sizeof(kafka_error));
+
 		if (rd_kafka_conf_set(
 			kafka_conf,
 			"bootstrap.servers",
@@ -244,6 +251,15 @@ extern void *thread_monitor(void *argument) {
 
 		if (!kafka_handle) {
 			DBG_WARN("failed to create kafka producer");
+		}
+
+		struct rd_kafka_metadata *kafka_metadata = NULL;
+		rd_kafka_resp_err_t kafka_connect = rd_kafka_metadata(kafka_handle, 0, NULL, &kafka_metadata, NET_KAFKA_TIMEOUT);
+		if (kafka_connect != RD_KAFKA_RESP_ERR_NO_ERROR) {
+			rd_kafka_destroy(kafka_handle);
+			kafka_handle = NULL;
+			DBG_WARN("failed to connect kafka producer");
+			return NULL;
 		}
 
 		DBG_INFO("kafka service started");
@@ -412,12 +428,14 @@ extern void *thread_monitor(void *argument) {
 
 	if (strlen(thread_monitor_zookeeper_path) > 0) {
 		zookeeper_close(zookeeper_handle);
+		zookeeper_handle = NULL;
 		DBG_INFO("zookeeper service terminated");
 	}
 
 	if (strlen(thread_monitor_kafka_path) > 0) {
 		rd_kafka_flush(kafka_handle, NET_KAFKA_TIMEOUT);
 		rd_kafka_destroy(kafka_handle);
+		kafka_handle = NULL;
 		DBG_INFO("kafka service terminated");
 	}
 
