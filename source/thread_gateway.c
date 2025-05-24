@@ -215,6 +215,13 @@ static int8_t thread_gateway_kafka_connect() {
 	    kafka_error,
 	    sizeof(kafka_error));
 
+	rd_kafka_conf_set(
+	    kafka_conf,
+	    "log_level",
+	    "0",
+	    kafka_error,
+	    sizeof(kafka_error));
+
 	thread_gateway_kafka = rd_kafka_new(
 	    RD_KAFKA_CONSUMER,
 	    kafka_conf,
@@ -226,38 +233,20 @@ static int8_t thread_gateway_kafka_connect() {
 		return -1;
 	}
 
+	struct rd_kafka_metadata *kafka_metadata = NULL;
+	rd_kafka_resp_err_t kafka_connect = rd_kafka_metadata(thread_gateway_kafka, 0, NULL, &kafka_metadata, NET_KAFKA_TIMEOUT);
+	if (kafka_connect != RD_KAFKA_RESP_ERR_NO_ERROR) {
+		rd_kafka_destroy(thread_gateway_kafka);
+		thread_gateway_kafka = NULL;
+		DBG_WARN("failed to connect kafka consumer");
+		return -1;
+	}
+
 	rd_kafka_poll_set_consumer(thread_gateway_kafka);
 	rd_kafka_topic_partition_list_add(kafka_topics, NET_KAFKA_TOPIC, -1);
 	rd_kafka_subscribe(thread_gateway_kafka, kafka_topics);
 	DBG_INFO("kafka service started");
 	return 0;
-}
-
-static void *thread_gateway_kafka_prometheus(void *argument) {
-	while (thread_gateway_kafka) {
-		rd_kafka_message_t *kafka_message = rd_kafka_consumer_poll(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
-		if (kafka_message) {
-			if (kafka_message->err) {
-				rd_kafka_message_destroy(kafka_message);
-				DBG_WARN("failed to consume kafka stream");
-				continue;
-			}
-
-			if (kafka_message->len > 0) {
-				CURL *curl = curl_easy_init();
-				curl_easy_setopt(curl, CURLOPT_URL, NET_KAFKA_PUSHGATE);
-				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, kafka_message->payload);
-				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, kafka_message->len);
-				curl_easy_perform(curl);
-				curl_easy_cleanup(curl);
-			}
-
-			rd_kafka_message_destroy(kafka_message);
-		}
-	}
-
-	DBG_WARN("kafka service terminated");
-	return NULL;
 }
 
 static int32_t thread_gateway_request_handler(
@@ -304,6 +293,8 @@ extern void thread_gateway_start() {
 	if (!thread_gateway) {
 		DBG_WARN("failed to start gateway thread");
 		return;
+	} else {
+		DBG_INFO("redirect service started");
 	}
 
 	if (thread_gateway_zookeeper_connect() < 0) {
@@ -314,25 +305,57 @@ extern void thread_gateway_start() {
 
 	if (thread_gateway_kafka_connect() < 0) {
 		thread_gateway_stop();
-		DBG_WARN("failed to start gateway_thread");
+		DBG_WARN("failed to start gateway thread");
 		return;
 	}
 
-	pthread_t pthread_kafka;
-	pthread_create(&pthread_kafka, NULL, thread_gateway_kafka_prometheus, NULL);
-	pthread_detach(pthread_kafka);
 	DBG_INFO("gateway thread started");
+	while (thread_gateway_kafka) {
+		rd_kafka_message_t *kafka_message = rd_kafka_consumer_poll(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
+		if (kafka_message) {
+			if (kafka_message->err) {
+				rd_kafka_message_destroy(kafka_message);
+				DBG_WARN("failed to consume kafka stream");
+				continue;
+			}
+
+			if (kafka_message->len > 0) {
+				CURL *curl = curl_easy_init();
+				curl_easy_setopt(curl, CURLOPT_URL, NET_KAFKA_PUSHGATE);
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, kafka_message->payload);
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, kafka_message->len);
+				curl_easy_perform(curl);
+				curl_easy_cleanup(curl);
+			}
+
+			rd_kafka_message_destroy(kafka_message);
+		}
+	}
+
+	DBG_INFO("gateway thread terminated");
 	return;
 }
 
 extern void thread_gateway_stop() {
-	MHD_stop_daemon(thread_gateway);
-	zookeeper_close(thread_gateway_zookeeper);
-	rd_kafka_flush(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
-	rd_kafka_destroy(thread_gateway_kafka);
-	DBG_INFO("zookeeper service terminated");
-	DBG_INFO("kafka service terminated");
-	DBG_INFO("gateway thread terminated");
+	if (thread_gateway_zookeeper) {
+		zookeeper_close(thread_gateway_zookeeper);
+		thread_gateway_zookeeper = NULL;
+		DBG_INFO("zookeeper service terminated");
+	}
+
+	if (thread_gateway_kafka) {
+		rd_kafka_flush(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
+		rd_kafka_destroy(thread_gateway_kafka);
+		thread_gateway_kafka = NULL;
+		DBG_INFO("kafka service terminated");
+	}
+
+	if (thread_gateway) {
+		MHD_stop_daemon(thread_gateway);
+		thread_gateway = NULL;
+		DBG_INFO("redirect service terminated");
+	}
+
 	return;
 }
 
