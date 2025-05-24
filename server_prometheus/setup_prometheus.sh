@@ -3,5 +3,5 @@
 sudo cp -arv prometheus/prometheus.yml /etc/prometheus/
 sudo cp -arv prometheus/prometheus-pushgateway /etc/default/
 
-sudo systemctl reload prometheus
-sudo systemctl reload prometheus-pushgateway
+sudo systemctl restart prometheus
+sudo systemctl restart prometheus-pushgateway
