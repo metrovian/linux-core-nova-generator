@@ -65,7 +65,6 @@ extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_sam
 
 	for (int32_t i = 0; i < *pop_samples; ++i) {
 		auptr[i] = auque->data[auque->front];
-
 		auque->front = (auque->front + 1) % auque->capacity;
 		auque->size = (auque->size - 1);
 	}
