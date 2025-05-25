@@ -386,11 +386,11 @@ extern void *thread_monitor(void *argument) {
 				snprintf(
 				    resource_json,
 				    sizeof(resource_json),
-				    "nova_resource_cpu{id=\"%s\"} %s\n"
-				    "nova_resource_mem{id=\"%s\"} %s\n"
-				    "nova_resource_rec{id=\"%s\"} %d\n"
-				    "nova_resource_enc{id=\"%s\"} %d\n"
-				    "nova_resource_str{id=\"%s\"} %d\n",
+				    "nova_resource_cpu{url=\"%s\"} %s\n"
+				    "nova_resource_mem{url=\"%s\"} %s\n"
+				    "nova_resource_rec{url=\"%s\"} %d\n"
+				    "nova_resource_enc{url=\"%s\"} %d\n"
+				    "nova_resource_str{url=\"%s\"} %d\n",
 				    zookeeper_data.url, resource_cpu,
 				    zookeeper_data.url, resource_memory,
 				    zookeeper_data.url, audio_volume,
