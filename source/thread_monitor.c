@@ -164,7 +164,7 @@ extern void *thread_monitor(void *argument) {
 	char resource_cpu[32] = "0";
 	char resource_memory[32] = "0";
 	char resource_network[32] = "0";
-	char resource_json[256] = "0";
+	char resource_json[2048] = "0";
 	char kafka_error[512] = "0";
 	snprintf(
 	    command_cpu,
@@ -381,36 +381,36 @@ extern void *thread_monitor(void *argument) {
 				DBG_WARN("failed to refresh zookeeper node: %d", zookeeper_code);
 				return NULL;
 			}
-		}
 
-		if (kafka_handle) {
-			snprintf(
-			    resource_json,
-			    sizeof(resource_json),
-			    "nova_resource_cpu %s\n"
-			    "nova_resource_mem %s\n"
-			    "nova_resource_rec %d\n"
-			    "nova_resource_enc %d\n"
-			    "nova_resource_str %d\n",
-			    resource_cpu,
-			    resource_memory,
-			    audio_volume,
-			    codec_bitrate,
-			    stream_bitrate);
+			if (kafka_handle) {
+				snprintf(
+				    resource_json,
+				    sizeof(resource_json),
+				    "nova_resource_cpu{id=\"%s\"} %s\n"
+				    "nova_resource_mem{id=\"%s\"} %s\n"
+				    "nova_resource_rec{id=\"%s\"} %d\n"
+				    "nova_resource_enc{id=\"%s\"} %d\n"
+				    "nova_resource_str{id=\"%s\"} %d\n",
+				    zookeeper_data.url, resource_cpu,
+				    zookeeper_data.url, resource_memory,
+				    zookeeper_data.url, audio_volume,
+				    zookeeper_data.url, codec_bitrate,
+				    zookeeper_data.url, stream_bitrate);
 
-			rd_kafka_resp_err_t kafka_resp =
-			    rd_kafka_producev(
-				kafka_handle,
-				RD_KAFKA_V_TOPIC(NET_KAFKA_TOPIC),
-				RD_KAFKA_V_VALUE(resource_json, strlen(resource_json)),
-				RD_KAFKA_V_END);
+				rd_kafka_resp_err_t kafka_resp =
+				    rd_kafka_producev(
+					kafka_handle,
+					RD_KAFKA_V_TOPIC(NET_KAFKA_TOPIC),
+					RD_KAFKA_V_VALUE(resource_json, strlen(resource_json)),
+					RD_KAFKA_V_END);
 
-			if (kafka_resp != RD_KAFKA_RESP_ERR_NO_ERROR) {
-				DBG_WARN("failed to produce kafka stream");
-				return NULL;
+				if (kafka_resp != RD_KAFKA_RESP_ERR_NO_ERROR) {
+					DBG_WARN("failed to produce kafka stream");
+					return NULL;
+				}
+
+				rd_kafka_poll(kafka_handle, 0);
 			}
-
-			rd_kafka_poll(kafka_handle, 0);
 		}
 
 		DBG_INFO(
