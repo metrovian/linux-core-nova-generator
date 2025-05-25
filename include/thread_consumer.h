@@ -8,8 +8,7 @@
 #include "stream_dash.h"
 #include "stream_janus.h"
 
-typedef enum
-{
+typedef enum {
 	CONSUMER_NONE = 0,
 	CONSUMER_PLAYBACK = 1,
 	CONSUMER_TRANSMISSION_HLS = 2,
@@ -24,4 +23,3 @@ extern void *thread_consumer_playback(void *argument);
 extern void *thread_consumer_transmission_hls(void *argument);
 extern void *thread_consumer_transmission_dash(void *argument);
 extern void *thread_consumer_transmission_janus(void *argument);
-

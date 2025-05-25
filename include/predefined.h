@@ -1,3 +1,4 @@
+// clang-format off
 #pragma once
 #include <assert.h>
 #include <unistd.h>
@@ -21,11 +22,13 @@
 #define NET_ZOOKEEPER_NAME	"/modules/module-"
 #define NET_ZOOKEEPER_PORT	2181
 #define NET_ZOOKEEPER_TIMEOUT	3000
+
 #define NET_KAFKA_LOCAL		"localhost:9094"
 #define NET_KAFKA_PUSHGATE	"localhost:9095/metrics/job/resource"
 #define NET_KAFKA_TOPIC		"resource"
 #define NET_KAFKA_PORT		9092
 #define NET_KAFKA_TIMEOUT	3000
+
 #define NET_GATEWAY_PORT	80
 #define NET_GATEWAY_MODE	MHD_USE_SELECT_INTERNALLY
 #define NET_GATEWAY_RESPONSE	MHD_RESPMEM_PERSISTENT
@@ -56,4 +59,4 @@
 #define DBG_INFO(message, ...) fprintf(stderr, INFO "[%s:%d] " RESET message "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 
 #define CREATE(structure) (structure *)malloc(sizeof(structure))
-
+// clang-format on

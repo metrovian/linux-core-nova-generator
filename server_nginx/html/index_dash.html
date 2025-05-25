@@ -28,7 +28,7 @@
 				background: #121212;
 				color: #f0f0f0;
 			}
-
+			
 			.audio-player {
 				background-color: #1e1e1e;
 				color: #ffffff;
@@ -38,7 +38,6 @@
 </head>
 <body>
 	<h1>Nova Generator</h1>
-
 	<div class="audio-container">
 		<audio
 			id="audio-player"
@@ -47,12 +46,10 @@
 			preload="auto">
 		</audio>
 	</div>
-
 	<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 	<script>
 		const audio = document.getElementById('audio-player');
 		const dash = dashjs.MediaPlayer().create();
-		
 		dash.initialize(audio, "/dash/stream.mpd", true);
 	</script>
 </body>

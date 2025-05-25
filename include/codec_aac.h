@@ -3,9 +3,9 @@
 #include <fdk-aac/aacdecoder_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-typedef struct
-{
+typedef struct {
 	HANDLE_AACENCODER encoder;
 	HANDLE_AACDECODER decoder;
 } codec_aac;

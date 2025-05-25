@@ -1,0 +1,18 @@
+UseTab: Always
+IndentWidth: 8
+TabWidth: 8
+PointerAlignment: Right
+ColumnLimit: 0
+SortIncludes: false
+IncludeBlocks: Preserve
+
+BraceWrapping:
+  AfterFunction: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false

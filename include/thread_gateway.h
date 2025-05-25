@@ -11,8 +11,7 @@
 #include <curl/easy.h>
 #include <curl/urlapi.h>
 
-typedef enum
-{
+typedef enum {
 	GATEWAY_ROUNDROBIN = 0,
 	GATEWAY_LEASTCPU = 1,
 	GATEWAY_LEASTNETWORK = 2,
@@ -20,6 +19,4 @@ typedef enum
 
 extern void thread_gateway_start();
 extern void thread_gateway_stop();
-
 extern void thread_gateway_set_rule(thread_gateway_rule rule);
-
