@@ -3,6 +3,7 @@ bin/
 
 # Records
 *.m4a
+*.log
 
 # Vscode
 .vscode/
