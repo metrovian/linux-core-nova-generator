@@ -39,7 +39,7 @@ extern void log_trace(const char *format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
 	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
-	wrapper_spdlog()->trace("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	wrapper_spdlog()->trace("{}", log_buffer);
 	va_end(arguments);
 	return;
 }
@@ -49,7 +49,7 @@ extern void log_debug(const char *format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
 	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
-	wrapper_spdlog()->debug("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	wrapper_spdlog()->debug("{}", log_buffer);
 	va_end(arguments);
 	return;
 }
@@ -79,7 +79,7 @@ extern void log_error(const char *format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
 	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
-	wrapper_spdlog()->error("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	wrapper_spdlog()->error("{}", log_buffer);
 	va_end(arguments);
 	return;
 }
@@ -89,7 +89,7 @@ extern void log_critical(const char *format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
 	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
-	wrapper_spdlog()->critical("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	wrapper_spdlog()->critical("{}", log_buffer);
 	va_end(arguments);
 	return;
 }
