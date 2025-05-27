@@ -35,7 +35,8 @@
 
 #define SYS_LOGGER_SYSTEM       "system"
 #define SYS_LOGGER_FORMAT       "log"
-#define SYS_LOGGER_LOGLEVEL     LOG_INFO
+#define SYS_LOGGER_SIZE         4096
+#define SYS_LOGGER_LOGLEVEL     2
 
 #define SYS_MONITOR_INTERVALS	3000
 #define SYS_MONITOR_TIMES	1000

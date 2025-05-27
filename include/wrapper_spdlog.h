@@ -5,21 +5,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef enum {
-	LOG_TRACE = 0,
-	LOG_DEBUG = 1,
-	LOG_INFO = 2,
-	LOG_WARN = 3,
-	LOG_ERROR = 4,
-	LOG_CRITICAL = 5,
-} wrapper_spdlog_level;
-
-extern void wrapper_spdlog_trace(const char *msg);
-extern void wrapper_spdlog_debug(const char *msg);
-extern void wrapper_spdlog_info(const char *msg);
-extern void wrapper_spdlog_warn(const char *msg);
-extern void wrapper_spdlog_error(const char *msg);
-extern void wrapper_spdlog_critical(const char *msg);
+extern void log_trace(const char *format, ...);
+extern void log_debug(const char *format, ...);
+extern void log_info(const char *format, ...);
+extern void log_warn(const char *format, ...);
+extern void log_error(const char *format, ...);
+extern void log_critical(const char *format, ...);
 #ifdef __cplusplus
 }
 #endif

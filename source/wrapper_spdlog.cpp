@@ -5,6 +5,8 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <memory>
 #include <ctime>
+#include <cstdarg>
+#include <cstdio>
 #include <iomanip>
 #include <sstream>
 
@@ -13,18 +15,17 @@ std::string wrapper_spdlog_export_name() {
 	std::tm tm;
 	localtime_r(&time_today, &tm);
 	std::ostringstream oss;
-	oss << "log_" << std::put_time(&tm, "%Y%m%d_%H%M%S") << "." << SYS_LOGGER_FORMAT;
+	oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << "." << SYS_LOGGER_FORMAT;
 	return oss.str();
 }
 
 static std::shared_ptr<spdlog::logger> wrapper_spdlog() {
 	static std::shared_ptr<spdlog::logger> logger = [] {
-		auto local = std::make_shared<spdlog::logger>(
-		    SYS_LOGGER_SYSTEM,
-		    spdlog::sinks_init_list{
-			std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-			std::make_shared<spdlog::sinks::basic_file_sink_mt>(wrapper_spdlog_export_name(), true)});
-
+		auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		console->set_pattern("%^[%l]%$ %v");
+		auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(wrapper_spdlog_export_name(), true);
+		file->set_pattern("[%Y-%m-%d-%H:%M:%S] [%l] %v");
+		auto local = std::make_shared<spdlog::logger>(SYS_LOGGER_SYSTEM, spdlog::sinks_init_list{console, file});
 		local->set_level((spdlog::level::level_enum)SYS_LOGGER_LOGLEVEL);
 		spdlog::register_logger(local);
 		return local;
@@ -33,32 +34,62 @@ static std::shared_ptr<spdlog::logger> wrapper_spdlog() {
 	return logger;
 }
 
-extern void wrapper_spdlog_trace(const char *msg) {
-	wrapper_spdlog()->trace("{}", msg);
+extern void log_trace(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->trace("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	va_end(arguments);
 	return;
 }
 
-extern void wrapper_spdlog_debug(const char *msg) {
-	wrapper_spdlog()->debug("{}", msg);
+extern void log_debug(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->debug("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	va_end(arguments);
 	return;
 }
 
-extern void wrapper_spdlog_info(const char *msg) {
-	wrapper_spdlog()->info("{}", msg);
+extern void log_info(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->info("{}", log_buffer);
+	va_end(arguments);
 	return;
 }
 
-extern void wrapper_spdlog_warn(const char *msg) {
-	wrapper_spdlog()->warn("{}", msg);
+extern void log_warn(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->warn("{}", log_buffer);
+	va_end(arguments);
 	return;
 }
 
-extern void wrapper_spdlog_error(const char *msg) {
-	wrapper_spdlog()->error("{}", msg);
+extern void log_error(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->error("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	va_end(arguments);
 	return;
 }
 
-extern void wrapper_spdlog_critical(const char *msg) {
-	wrapper_spdlog()->critical("{}", msg);
+extern void log_critical(const char *format, ...) {
+	char log_buffer[SYS_LOGGER_SIZE];
+	va_list arguments;
+	va_start(arguments, format);
+	vsnprintf(log_buffer, sizeof(log_buffer), format, arguments);
+	wrapper_spdlog()->critical("[{}:{}] {}", __FILE__, __LINE__, log_buffer);
+	va_end(arguments);
 	return;
 }
