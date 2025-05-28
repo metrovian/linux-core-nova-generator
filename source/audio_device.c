@@ -72,13 +72,19 @@ extern int8_t audio_device_open(audio_device *audev, int8_t aumod, int16_t chann
 
 extern int8_t audio_device_close(audio_device *audev) {
 	if (audev) {
+		snd_pcm_stream_t aumod = snd_pcm_stream(audev->handle);
 		snd_pcm_hw_params_free(audev->params);
 		snd_pcm_drain(audev->handle);
 		snd_pcm_close(audev->handle);
 		audev->params = NULL;
 		audev->handle = NULL;
-		audev = NULL;
-		log_debug("audio device close success");
+		if (aumod == SND_PCM_STREAM_CAPTURE) {
+			log_debug("audio capture device close success");
+		} else if (aumod == SND_PCM_STREAM_PLAYBACK) {
+			log_debug("audio playback device close success");
+		} else {
+			log_critical("invalid audio device");
+		}
 	}
 
 	return 0;
