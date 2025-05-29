@@ -1,4 +1,5 @@
 #include "format_aac.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 static const int32_t ADTS_TABLE_SAMPLE_RATE[16] = {
@@ -23,26 +24,26 @@ static const int32_t ADTS_TABLE_SAMPLE_RATE[16] = {
 extern int8_t format_aac_read_file(const char *name, int8_t **coptr, int16_t *channels, int32_t *sample_rate, int32_t *read_payloads) {
 	FILE *fptr = fopen(name, "rb");
 	if (!fptr) {
-		DBG_WARN("failed to open file");
+		log_error("failed to open aac file");
 		return -1;
 	}
 
 	int8_t header[7];
 	if (fread(&header, sizeof(header), 1, fptr) != 1) {
 		fclose(fptr);
-		DBG_WARN("failed to read header");
+		log_error("failed to read adts header");
 		return -1;
 	}
 
 	if ((header[0] & 0xFF) != 0xFF) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid adts header");
 		return -1;
 	}
 
 	if ((header[1] & 0xF0) != 0xF0) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid adts header");
 		return -1;
 	}
 
@@ -61,29 +62,29 @@ extern int8_t format_aac_read_file(const char *name, int8_t **coptr, int16_t *ch
 	if (fread(coptr, header_payloads, 1, fptr) != 1) {
 		free(*coptr);
 		fclose(fptr);
-		DBG_WARN("failed to read payloads");
+		log_error("failed to read aac payloads");
 		return -1;
 	}
 
 	fclose(fptr);
-	DBG_INFO("%d payloads read success", *read_payloads);
+	log_info("%d aac payloads read success", *read_payloads);
 	return 0;
 }
 
 extern int8_t format_aac_write_file(const char *name, int8_t **coptr, int16_t *channels, int32_t *sample_rate, int32_t *write_payloads) {
 	FILE *fptr = fopen(name, "wb");
 	if (!fptr) {
-		DBG_WARN("failed to open file");
+		log_error("failed to open aac file");
 		return -1;
 	}
 
 	if (fwrite(*coptr, sizeof(int8_t), *write_payloads, fptr) != *write_payloads) {
 		fclose(fptr);
-		DBG_WARN("failed to write payloads");
+		log_error("failed to write aac payloads");
 		return -1;
 	}
 
 	fclose(fptr);
-	DBG_INFO("%d payloads write success", *write_payloads);
+	log_info("%d aac payloads write success", *write_payloads);
 	return 0;
 }

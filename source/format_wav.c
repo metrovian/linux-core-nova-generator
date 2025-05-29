@@ -1,4 +1,5 @@
 #include "format_wav.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 static int32_t format_wav_byte_rate(int16_t channels, int32_t sample_rate) {
@@ -16,57 +17,57 @@ static int32_t format_wav_data_size(int32_t data_frames) {
 extern int8_t format_wav_read_file(const char *name, int16_t **auptr, int16_t *channels, int32_t *sample_rate, int32_t *read_frames) {
 	FILE *fptr = fopen(name, "rb");
 	if (!fptr) {
-		DBG_WARN("failed to open file");
+		log_error("failed to open wav file");
 		return -1;
 	}
 
 	header_wav header;
 	if (fread(&header, sizeof(header_wav), 1, fptr) != 1) {
 		fclose(fptr);
-		DBG_WARN("failed to read header");
+		log_error("failed to read wav header");
 		return -1;
 	}
 
 	if (strncmp((const char *)header.riff_id, "RIFF", 4) != 0) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid wav header");
 		return -1;
 	}
 
 	if (strncmp((const char *)header.wave_id, "WAVE", 4) != 0) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid wav header");
 		return -1;
 	}
 
 	if (strncmp((const char *)header.fmt_id, "fmt ", 4) != 0) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid wav header");
 		return -1;
 	}
 
 	if (strncmp((const char *)header.data_id, "data", 4) != 0) {
 		fclose(fptr);
-		DBG_WARN("invalid header");
+		log_critical("invalid wav header");
 		return -1;
 	}
 
 	if (header.fmt_type != 1) {
 		fclose(fptr);
-		DBG_WARN("invalid audio format");
+		log_critical("invalid audio format");
 		return -1;
 	}
 
 	if (header.bits_per_sample != 16) {
 		fclose(fptr);
-		DBG_WARN("invalid bits per sample");
+		log_critical("invalid bits per sample");
 		return -1;
 	}
 
 	*auptr = (int16_t *)malloc(header.data_size);
 	if (!(*auptr)) {
 		fclose(fptr);
-		DBG_WARN("failed to allocate read frames");
+		log_error("failed to allocate read audio frames");
 		return -1;
 	}
 
@@ -76,19 +77,19 @@ extern int8_t format_wav_read_file(const char *name, int16_t **auptr, int16_t *c
 	if (fread(*auptr, sizeof(int16_t), *read_frames, fptr) != *read_frames) {
 		free(*auptr);
 		fclose(fptr);
-		DBG_WARN("failed to read frames");
+		log_error("failed to read audio frames");
 		return -1;
 	}
 
 	fclose(fptr);
-	DBG_INFO("%d frames read success", *read_frames);
+	log_info("%d audio frames read success", *read_frames);
 	return 0;
 }
 
 extern int8_t format_wav_write_file(const char *name, int16_t **auptr, int16_t *channels, int32_t *sample_rate, int32_t *write_frames) {
 	FILE *fptr = fopen(name, "wb");
 	if (!fptr) {
-		DBG_WARN("failed to open file");
+		log_error("failed to open wav file");
 		return -1;
 	}
 
@@ -110,17 +111,17 @@ extern int8_t format_wav_write_file(const char *name, int16_t **auptr, int16_t *
 
 	if (fwrite(&header, sizeof(header_wav), 1, fptr) != 1) {
 		fclose(fptr);
-		DBG_WARN("failed to write header");
+		log_error("failed to write wav header");
 		return -1;
 	}
 
 	if (fwrite(*auptr, sizeof(int16_t), *write_frames, fptr) != *write_frames) {
 		fclose(fptr);
-		DBG_WARN("failed to write frames");
+		log_error("failed to write audio frames");
 		return -1;
 	}
 
 	fclose(fptr);
-	DBG_INFO("%d frames write success", *write_frames);
+	log_info("%d audio frames write success", *write_frames);
 	return 0;
 }
