@@ -1,13 +1,14 @@
 #include "thread_producer.h"
 #include "thread_consumer.h"
 #include "thread_monitor.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 void HANDLE_SIGINT(int32_t signal) {
 	g_thread_producer = PRODUCER_NONE;
 	g_thread_consumer = CONSUMER_NONE;
 	thread_monitor_stop();
-	DBG_WARN("SIGINT");
+	log_warn("SIGINT");
 	return;
 }
 
@@ -23,11 +24,11 @@ int32_t main(int32_t argc, char *argv[]) {
 		} else if (strncmp(argv[1], "opus", 4) == 0) {
 			pthread_create(&pthread_producer, NULL, thread_producer_opus, NULL);
 		} else {
-			DBG_WARN("invalid codec");
+			log_critical("invalid codec");
 			return -1;
 		}
 	} else {
-		DBG_WARN("invalid parameters");
+		log_critical("invalid parameters");
 		return -1;
 	}
 

@@ -1,16 +1,17 @@
 #include "thread_producer.h"
 #include "thread_consumer.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 void HANDLE_SIGINT(int32_t signal) {
 	g_thread_producer = PRODUCER_NONE;
 	g_thread_consumer = CONSUMER_NONE;
-	DBG_WARN("SIGINT");
+	log_warn("SIGINT");
 	return;
 }
 
 void HANDLE_SIGPIPE(int32_t signal) {
-	DBG_WARN("SIGPIPE");
+	log_warn("SIGPIPE");
 	return;
 }
 
@@ -24,7 +25,7 @@ int32_t main(int32_t argc, char *argv[]) {
 		usleep(AUD_BUFFER_TIMES);
 		pthread_create(&pthread_consumer, NULL, thread_consumer_transmission_janus, argv[1]);
 	} else {
-		DBG_WARN("invalid parameters");
+		log_critical("invalid parameters");
 		return -1;
 	}
 

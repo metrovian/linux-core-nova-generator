@@ -1,9 +1,10 @@
 #include "thread_gateway.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 void HANDLE_SIGINT(int32_t signal) {
 	thread_gateway_stop();
-	DBG_WARN("SIGINT");
+	log_warn("SIGINT");
 	return;
 }
 
