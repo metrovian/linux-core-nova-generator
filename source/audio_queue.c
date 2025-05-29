@@ -49,7 +49,6 @@ extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_s
 		struct timespec timeout;
 		clock_gettime(CLOCK_MONOTONIC, &timeout);
 		timeout.tv_sec += MAX_Q_WAIT_AUDIO;
-		log_warn("failed to push audio frames immediately");
 		if (pthread_cond_timedwait(&auque->push_available, &auque->mutex, &timeout) == ETIMEDOUT) {
 			log_error("failed to push audio frames without overwrite");
 			break;
@@ -73,7 +72,6 @@ extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_sam
 		struct timespec timeout;
 		clock_gettime(CLOCK_MONOTONIC, &timeout);
 		timeout.tv_sec += MAX_Q_WAIT_AUDIO;
-		log_warn("failed to pop audio frames immediately");
 		if (pthread_cond_timedwait(&auque->pop_available, &auque->mutex, &timeout) == ETIMEDOUT) {
 			log_error("failed to pop audio frames within the expected time");
 			break;
