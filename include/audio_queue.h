@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <errno.h>
 
 typedef struct {
 	int16_t *data;
@@ -12,6 +13,7 @@ typedef struct {
 	pthread_mutex_t mutex;
 	pthread_cond_t push_available;
 	pthread_cond_t pop_available;
+	pthread_condattr_t attribute;
 } audio_queue;
 
 extern audio_queue *audio_queue_create(int32_t aucap);

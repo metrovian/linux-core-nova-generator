@@ -22,8 +22,10 @@ extern audio_queue *audio_queue_create(int32_t aucap) {
 	queue->front = 0;
 	queue->back = 0;
 	pthread_mutex_init(&queue->mutex, NULL);
-	pthread_cond_init(&queue->push_available, NULL);
-	pthread_cond_init(&queue->pop_available, NULL);
+	pthread_condattr_init(&queue->attribute);
+	pthread_condattr_setclock(&queue->attribute, CLOCK_MONOTONIC);
+	pthread_cond_init(&queue->push_available, &queue->attribute);
+	pthread_cond_init(&queue->pop_available, &queue->attribute);
 	log_debug("audio queue create success");
 	return queue;
 }
@@ -44,8 +46,14 @@ extern void audio_queue_destroy(audio_queue *auque) {
 extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_samples) {
 	pthread_mutex_lock(&auque->mutex);
 	while (auque->capacity < auque->size + *push_samples) {
+		struct timespec timeout;
+		clock_gettime(CLOCK_MONOTONIC, &timeout);
+		timeout.tv_sec += MAX_Q_WAIT_AUDIO;
 		log_warn("failed to push audio frames immediately");
-		pthread_cond_wait(&auque->push_available, &auque->mutex);
+		if (pthread_cond_timedwait(&auque->push_available, &auque->mutex, &timeout) == ETIMEDOUT) {
+			log_error("failed to push audio frames without overwrite");
+			break;
+		}
 	}
 
 	for (int32_t i = 0; i < *push_samples; ++i) {
@@ -62,8 +70,14 @@ extern void audio_queue_push(audio_queue *auque, int16_t *auptr, int32_t *push_s
 extern void audio_queue_pop(audio_queue *auque, int16_t *auptr, int32_t *pop_samples) {
 	pthread_mutex_lock(&auque->mutex);
 	while (auque->size < *pop_samples) {
+		struct timespec timeout;
+		clock_gettime(CLOCK_MONOTONIC, &timeout);
+		timeout.tv_sec += MAX_Q_WAIT_AUDIO;
 		log_warn("failed to pop audio frames immediately");
-		pthread_cond_wait(&auque->pop_available, &auque->mutex);
+		if (pthread_cond_timedwait(&auque->pop_available, &auque->mutex, &timeout) == ETIMEDOUT) {
+			log_error("failed to pop audio frames within the expected time");
+			break;
+		}
 	}
 
 	for (int32_t i = 0; i < *pop_samples; ++i) {
