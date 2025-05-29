@@ -1,4 +1,5 @@
 #include "stream_dash.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 extern int8_t stream_dash_open(FILE **stream, const char *path) {
@@ -35,11 +36,11 @@ extern int8_t stream_dash_open(FILE **stream, const char *path) {
 
 	*stream = popen(command_stream, "w");
 	if (!(*stream)) {
-		DBG_WARN("failed to open dash stream");
+		log_error("failed to open dash stream");
 		return -1;
 	}
 
-	DBG_INFO("dash stream open success");
+	log_debug("dash stream open success");
 	return 0;
 }
 
@@ -62,13 +63,13 @@ extern int8_t stream_dash_close(FILE **stream, const char *path) {
 	system(command_save);
 	system(command_umount);
 	pclose(*stream);
-	DBG_INFO("dash stream close success");
+	log_debug("dash stream close success");
 	return 0;
 }
 
 extern int8_t stream_dash_transmission_payloads(FILE **stream, int8_t *coptr, int32_t *packet_payloads) {
 	if (fwrite(coptr, *packet_payloads, 1, *stream) != 1) {
-		DBG_WARN("failed to stream payloads");
+		log_error("failed to stream dash payloads");
 		return -1;
 	}
 

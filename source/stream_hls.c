@@ -1,4 +1,5 @@
 #include "stream_hls.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 extern int8_t stream_hls_open(FILE **stream, const char *path) {
@@ -39,11 +40,11 @@ extern int8_t stream_hls_open(FILE **stream, const char *path) {
 
 	*stream = popen(command_stream, "w");
 	if (!(*stream)) {
-		DBG_WARN("failed to open hls stream");
+		log_error("failed to open hls stream");
 		return -1;
 	}
 
-	DBG_INFO("hls stream open success");
+	log_debug("hls stream open success");
 	return 0;
 }
 
@@ -67,13 +68,13 @@ extern int8_t stream_hls_close(FILE **stream, const char *path) {
 	system(command_save);
 	system(command_umount);
 	pclose(*stream);
-	DBG_INFO("hls stream close success");
+	log_debug("hls stream close success");
 	return 0;
 }
 
 extern int8_t stream_hls_transmission_payloads(FILE **stream, int8_t *coptr, int32_t *packet_payloads) {
 	if (fwrite(coptr, *packet_payloads, 1, *stream) != 1) {
-		DBG_WARN("failed to stream payloads");
+		log_error("failed to stream hls payloads");
 		return -1;
 	}
 
