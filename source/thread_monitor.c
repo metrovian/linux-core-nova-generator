@@ -1,4 +1,5 @@
 #include "thread_monitor.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 #include "preshared.h"
 
@@ -45,7 +46,7 @@ static void thread_monitor_zookeeper_watcher(
 		return;
 	}
 
-	DBG_WARN("invalid zookeeper state");
+	log_critical("invalid zookeeper state");
 	return;
 }
 
@@ -54,7 +55,7 @@ static void thread_monitor_kafka_watcher(
     const rd_kafka_message_t *message,
     void *opaque) {
 	if (message->err) {
-		DBG_WARN("failed to deliver: %s\n", rd_kafka_message_errstr(message));
+		log_error("failed to deliver: %s\n", rd_kafka_message_errstr(message));
 		return;
 	}
 
@@ -67,7 +68,7 @@ static char *thread_monitor_get_ipv4() {
 	static char iface[INET_ADDRSTRLEN] = NET_INTERFACE;
 	fd_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd_socket == -1) {
-		DBG_WARN("failed to get ipv4 address");
+		log_error("failed to get ipv4 address");
 		return "";
 	}
 
@@ -75,7 +76,7 @@ static char *thread_monitor_get_ipv4() {
 	strncpy(ifr.ifr_name, iface, IFNAMSIZ - 1);
 	ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 	if (ioctl(fd_socket, SIOCGIFADDR, &ifr) == -1) {
-		DBG_WARN("failed to get ipv4 address");
+		log_error("failed to get ipv4 address");
 		return "";
 	}
 
@@ -215,11 +216,11 @@ extern void *thread_monitor(void *argument) {
 			0);
 
 		if (!zookeeper_handle) {
-			DBG_WARN("failed to connect zookeeper service");
+			log_error("failed to connect zookeeper service");
 			return NULL;
 		}
 
-		DBG_INFO("zookeeper service started");
+		log_info("zookeeper service started");
 	}
 
 	if (strlen(thread_monitor_kafka_path) > 0) {
@@ -238,7 +239,7 @@ extern void *thread_monitor(void *argument) {
 			thread_monitor_kafka_path,
 			kafka_error,
 			sizeof(kafka_error) != RD_KAFKA_CONF_OK)) {
-			DBG_WARN("failed to connnect kafka service");
+			log_error("failed to connnect kafka service");
 			return NULL;
 		}
 
@@ -250,7 +251,7 @@ extern void *thread_monitor(void *argument) {
 			sizeof(kafka_error));
 
 		if (!kafka_handle) {
-			DBG_WARN("failed to create kafka producer");
+			log_error("failed to create kafka producer");
 		}
 
 		struct rd_kafka_metadata *kafka_metadata = NULL;
@@ -258,26 +259,26 @@ extern void *thread_monitor(void *argument) {
 		if (kafka_connect != RD_KAFKA_RESP_ERR_NO_ERROR) {
 			rd_kafka_destroy(kafka_handle);
 			kafka_handle = NULL;
-			DBG_WARN("failed to connect kafka producer");
+			log_error("failed to connect kafka producer");
 			return NULL;
 		}
 
-		DBG_INFO("kafka service started");
+		log_info("kafka service started");
 	}
 
-	DBG_INFO("monitor thread started");
+	log_info("monitor thread started");
 	while (thread_monitor_run) {
 		clock_gettime(CLOCK_MONOTONIC, &thread_monitor_clock_start);
 		stream_cpu = popen(command_cpu, "r");
 		stream_memory = popen(command_memory, "r");
 		stream_network = popen(command_network, "r");
 		if (!stream_cpu) {
-			DBG_WARN("failed to open cpu stream");
+			log_error("failed to open cpu stream");
 			break;
 		}
 
 		if (!stream_memory) {
-			DBG_WARN("failed to open memory stream");
+			log_error("failed to open memory stream");
 			break;
 		}
 
@@ -364,7 +365,7 @@ extern void *thread_monitor(void *argument) {
 					sizeof(zookeeper_data.name));
 
 				if (zookeeper_code != ZOK) {
-					DBG_WARN("failed to create zookeeper node: %d", zookeeper_code);
+					log_error("failed to create zookeeper node: %d", zookeeper_code);
 					return NULL;
 				}
 			}
@@ -378,7 +379,7 @@ extern void *thread_monitor(void *argument) {
 				-1);
 
 			if (zookeeper_code != ZOK) {
-				DBG_WARN("failed to refresh zookeeper node: %d", zookeeper_code);
+				log_error("failed to refresh zookeeper node: %d", zookeeper_code);
 				return NULL;
 			}
 
@@ -405,7 +406,7 @@ extern void *thread_monitor(void *argument) {
 					RD_KAFKA_V_END);
 
 				if (kafka_resp != RD_KAFKA_RESP_ERR_NO_ERROR) {
-					DBG_WARN("failed to produce kafka stream");
+					log_error("failed to produce kafka stream");
 					return NULL;
 				}
 
@@ -413,7 +414,7 @@ extern void *thread_monitor(void *argument) {
 			}
 		}
 
-		DBG_INFO(
+		log_info(
 		    "cpu: %-3s%% | "
 		    "mem: %-3s%% | "
 		    "rec: %-3d dbfs | "
@@ -429,16 +430,16 @@ extern void *thread_monitor(void *argument) {
 	if (strlen(thread_monitor_zookeeper_path) > 0) {
 		zookeeper_close(zookeeper_handle);
 		zookeeper_handle = NULL;
-		DBG_INFO("zookeeper service terminated");
+		log_info("zookeeper service terminated");
 	}
 
 	if (strlen(thread_monitor_kafka_path) > 0) {
 		rd_kafka_flush(kafka_handle, NET_KAFKA_TIMEOUT);
 		rd_kafka_destroy(kafka_handle);
 		kafka_handle = NULL;
-		DBG_INFO("kafka service terminated");
+		log_info("kafka service terminated");
 	}
 
-	DBG_INFO("monitor thread terminated");
+	log_info("monitor thread terminated");
 	return NULL;
 }
