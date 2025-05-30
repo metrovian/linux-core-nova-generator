@@ -1,4 +1,5 @@
 #include "thread_producer.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 
 audio_device *g_audio_capture = NULL;
@@ -10,17 +11,16 @@ thread_producer g_thread_producer = PRODUCER_NONE;
 
 extern void *thread_producer_raw(void *argument) {
 	if (g_thread_producer != PRODUCER_NONE) {
-		DBG_WARN("failed to start raw producer thread");
+		log_error("failed to start raw producer thread");
 		return NULL;
 	}
 
-	DBG_INFO("raw producer thread started");
 	g_audio_capture = CREATE(audio_device);
 	int16_t raw_buffer[AUD_BUFFER_FRAMES * AUD_CHANNELS];
 	int32_t raw_samples = 0;
 	if (audio_device_open(g_audio_capture, AUD_MODE_CAPTURE, AUD_CHANNELS, AUD_SAMPLE_RATE) < 0) {
 		free(g_audio_capture);
-		DBG_WARN("raw producer thread terminated");
+		log_error("failed to start raw producer thread");
 		return NULL;
 	}
 
@@ -28,10 +28,11 @@ extern void *thread_producer_raw(void *argument) {
 	if (!g_audio_queue) {
 		audio_device_close(g_audio_capture);
 		free(g_audio_capture);
-		DBG_WARN("raw producer thread terminated");
+		log_error("failed to start raw producer thread");
 		return NULL;
 	}
 
+	log_info("raw producer thread started");
 	g_thread_producer = PRODUCER_RAW;
 	while (g_thread_producer) {
 		raw_samples = AUD_BUFFER_FRAMES;
@@ -42,17 +43,16 @@ extern void *thread_producer_raw(void *argument) {
 
 	audio_device_close(g_audio_capture);
 	free(g_audio_capture);
-	DBG_INFO("raw producer thread terminated");
+	log_info("raw producer thread terminated");
 	return NULL;
 }
 
 extern void *thread_producer_aac(void *argument) {
 	if (g_thread_producer != PRODUCER_NONE) {
-		DBG_WARN("failed to start aac producer thread");
+		log_error("failed to start aac producer thread");
 		return NULL;
 	}
 
-	DBG_INFO("aac producer thread started");
 	g_audio_capture = CREATE(audio_device);
 	g_codec_aac = CREATE(codec_aac);
 	int16_t raw_buffer[AAC_BUFFER_FRAMES * AUD_CHANNELS];
@@ -62,7 +62,7 @@ extern void *thread_producer_aac(void *argument) {
 	if (audio_device_open(g_audio_capture, AUD_MODE_CAPTURE, AUD_CHANNELS, AUD_SAMPLE_RATE) < 0) {
 		free(g_audio_capture);
 		free(g_codec_aac);
-		DBG_WARN("aac producer thread terminated");
+		log_error("failed to start aac producer thread");
 		return NULL;
 	}
 
@@ -70,7 +70,7 @@ extern void *thread_producer_aac(void *argument) {
 		audio_device_close(g_audio_capture);
 		free(g_audio_capture);
 		free(g_codec_aac);
-		DBG_WARN("aac producer thread terminated");
+		log_error("failed to start aac producer thread");
 		return NULL;
 	}
 
@@ -80,10 +80,11 @@ extern void *thread_producer_aac(void *argument) {
 		codec_aac_close(g_codec_aac);
 		free(g_audio_capture);
 		free(g_codec_aac);
-		DBG_WARN("aac producer thread terminated");
+		log_error("failed to start aac producer thread");
 		return NULL;
 	}
 
+	log_info("aac producer thread started");
 	g_thread_producer = PRODUCER_AAC;
 	while (g_thread_producer) {
 		raw_samples = AAC_BUFFER_FRAMES;
@@ -98,17 +99,16 @@ extern void *thread_producer_aac(void *argument) {
 	codec_aac_close(g_codec_aac);
 	free(g_audio_capture);
 	free(g_codec_aac);
-	DBG_INFO("aac producer thread terminated");
+	log_info("aac producer thread terminated");
 	return NULL;
 }
 
 extern void *thread_producer_opus(void *argument) {
 	if (g_thread_producer != PRODUCER_NONE) {
-		DBG_WARN("failed to start opus producer thread");
+		log_error("failed to start opus producer thread");
 		return NULL;
 	}
 
-	DBG_INFO("opus producer thread started");
 	g_audio_capture = CREATE(audio_device);
 	g_codec_opus = CREATE(codec_opus);
 	int16_t raw_buffer[OPUS_BUFFER_FRAMES * AUD_CHANNELS];
@@ -119,7 +119,7 @@ extern void *thread_producer_opus(void *argument) {
 	if (audio_device_open(g_audio_capture, AUD_MODE_CAPTURE, AUD_CHANNELS, AUD_SAMPLE_RATE) < 0) {
 		free(g_audio_capture);
 		free(g_codec_opus);
-		DBG_WARN("opus producer thread terminated");
+		log_error("failed to start opus producer thread");
 		return NULL;
 	}
 
@@ -127,7 +127,7 @@ extern void *thread_producer_opus(void *argument) {
 		audio_device_close(g_audio_capture);
 		free(g_audio_capture);
 		free(g_codec_opus);
-		DBG_WARN("opus producer thread terminated");
+		log_error("failed to start opus producer thread");
 		return NULL;
 	}
 
@@ -137,10 +137,11 @@ extern void *thread_producer_opus(void *argument) {
 		codec_opus_close(g_codec_opus);
 		free(g_audio_capture);
 		free(g_codec_opus);
-		DBG_WARN("opus producer thread terminated");
+		log_error("failed to start opus producer thread");
 		return NULL;
 	}
 
+	log_info("opus producer thread started");
 	g_thread_producer = PRODUCER_OPUS;
 	while (g_thread_producer) {
 		raw_samples = OPUS_BUFFER_FRAMES;
@@ -156,6 +157,6 @@ extern void *thread_producer_opus(void *argument) {
 	codec_opus_close(g_codec_opus);
 	free(g_audio_capture);
 	free(g_codec_opus);
-	DBG_INFO("opus producer thread terminated");
+	log_info("opus producer thread terminated");
 	return NULL;
 }
