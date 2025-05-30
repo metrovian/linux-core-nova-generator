@@ -1,4 +1,5 @@
 #include "thread_gateway.h"
+#include "wrapper_spdlog.h"
 #include "predefined.h"
 #include "preshared.h"
 
@@ -71,10 +72,10 @@ static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, in
 				}
 
 				if (modules_now > modules_prev) {
-					DBG_INFO("zookeeper module connected: %d", modules_now);
+					log_info("zookeeper module connected: %d", modules_now);
 					return;
 				} else {
-					DBG_INFO("zookeeper module disconnected: %d", modules_now);
+					log_info("zookeeper module disconnected: %d", modules_now);
 					return;
 				}
 			}
@@ -115,11 +116,11 @@ static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, in
 			return;
 		}
 
-		DBG_WARN("invalid zookeeper event: %d", type);
+		log_critical("invalid zookeeper event: %d", type);
 		return;
 	}
 
-	DBG_WARN("invalid zookeeper state: %d", state);
+	log_critical("invalid zookeeper state: %d", state);
 	return;
 }
 
@@ -135,18 +136,18 @@ static int8_t thread_gateway_zookeeper_connect() {
 		0);
 
 	if (!thread_gateway_zookeeper) {
-		DBG_WARN("failed to connect zookeeper service");
+		log_error("failed to connect zookeeper service");
 		return -1;
 	}
 
 	zoo_get_children(thread_gateway_zookeeper, NET_ZOOKEEPER_NODE, 1, NULL);
-	DBG_INFO("zookeeper service started");
+	log_info("zookeeper service started");
 	return 0;
 }
 
 static char *thread_gateway_zookeeper_balance() {
 	if (thread_gateway_zookeeper_modules.count < 0) {
-		DBG_WARN("failed to get proper module");
+		log_error("failed to get proper module");
 		return "";
 	}
 
@@ -188,7 +189,7 @@ static char *thread_gateway_zookeeper_balance() {
 	}
 
 	default: {
-		DBG_WARN("invalid load balancing rule");
+		log_critical("invalid load balancing rule");
 		return "";
 	}
 	}
@@ -229,7 +230,7 @@ static int8_t thread_gateway_kafka_connect() {
 	    sizeof(kafka_error));
 
 	if (!thread_gateway_kafka) {
-		DBG_WARN("failed to create kafka consumer");
+		log_error("failed to create kafka consumer");
 		return -1;
 	}
 
@@ -238,14 +239,14 @@ static int8_t thread_gateway_kafka_connect() {
 	if (kafka_connect != RD_KAFKA_RESP_ERR_NO_ERROR) {
 		rd_kafka_destroy(thread_gateway_kafka);
 		thread_gateway_kafka = NULL;
-		DBG_WARN("failed to connect kafka consumer");
+		log_error("failed to connect kafka consumer");
 		return -1;
 	}
 
 	rd_kafka_poll_set_consumer(thread_gateway_kafka);
 	rd_kafka_topic_partition_list_add(kafka_topics, NET_KAFKA_TOPIC, -1);
 	rd_kafka_subscribe(thread_gateway_kafka, kafka_topics);
-	DBG_INFO("kafka service started");
+	log_info("kafka service started");
 	return 0;
 }
 
@@ -290,32 +291,33 @@ extern void thread_gateway_start() {
 		NULL,
 		MHD_OPTION_END);
 
-	if (!thread_gateway) {
-		DBG_WARN("failed to start gateway thread");
-		return;
+	if (thread_gateway) {
+		log_info("redirect service started");
 	} else {
-		DBG_INFO("redirect service started");
+
+		log_error("failed to start gateway thread");
+		return;
 	}
 
 	if (thread_gateway_zookeeper_connect() < 0) {
 		thread_gateway_stop();
-		DBG_WARN("failed to start gateway thread");
+		log_error("failed to start gateway thread");
 		return;
 	}
 
 	if (thread_gateway_kafka_connect() < 0) {
 		thread_gateway_stop();
-		DBG_WARN("failed to start gateway thread");
+		log_error("failed to start gateway thread");
 		return;
 	}
 
-	DBG_INFO("gateway thread started");
+	log_info("gateway thread started");
 	while (thread_gateway_kafka) {
 		rd_kafka_message_t *kafka_message = rd_kafka_consumer_poll(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
 		if (kafka_message) {
 			if (kafka_message->err) {
 				rd_kafka_message_destroy(kafka_message);
-				DBG_WARN("failed to consume kafka stream");
+				log_error("failed to consume kafka stream");
 				continue;
 			}
 
@@ -332,7 +334,7 @@ extern void thread_gateway_start() {
 		}
 	}
 
-	DBG_INFO("gateway thread terminated");
+	log_info("gateway thread terminated");
 	return;
 }
 
@@ -340,20 +342,20 @@ extern void thread_gateway_stop() {
 	if (thread_gateway_zookeeper) {
 		zookeeper_close(thread_gateway_zookeeper);
 		thread_gateway_zookeeper = NULL;
-		DBG_INFO("zookeeper service terminated");
+		log_info("zookeeper service terminated");
 	}
 
 	if (thread_gateway_kafka) {
 		rd_kafka_flush(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
 		rd_kafka_destroy(thread_gateway_kafka);
 		thread_gateway_kafka = NULL;
-		DBG_INFO("kafka service terminated");
+		log_info("kafka service terminated");
 	}
 
 	if (thread_gateway) {
 		MHD_stop_daemon(thread_gateway);
 		thread_gateway = NULL;
-		DBG_INFO("redirect service terminated");
+		log_info("redirect service terminated");
 	}
 
 	return;
@@ -393,11 +395,11 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule) {
 	}
 
 	default: {
-		DBG_WARN("invalid load balancing rule");
+		log_error("invalid load balancing rule");
 		return;
 	}
 	}
 
-	DBG_INFO("%s", notice);
+	log_info("%s", notice);
 	return;
 }
