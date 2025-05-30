@@ -34,6 +34,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
 	usleep(AUD_BUFFER_TIMES);
 	pthread_create(&pthread_consumer, NULL, thread_consumer_playback, NULL);
+	usleep(AUD_BUFFER_TIMES);
 	thread_monitor_start();
 	pthread_join(pthread_producer, NULL);
 	pthread_join(pthread_consumer, NULL);

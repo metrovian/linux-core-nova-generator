@@ -87,34 +87,43 @@ static char *thread_monitor_get_ipv4() {
 }
 
 extern void thread_monitor_audio_capture(int16_t *auptr, int32_t *read_samples) {
-	double square = 0;
-	double rms = 0;
-	for (int32_t i = 0; i < *read_samples; ++i) {
-		square += (double)(auptr[i] * auptr[i]);
+	if (thread_monitor_run) {
+		double square = 0;
+		double rms = 0;
+		for (int32_t i = 0; i < *read_samples; ++i) {
+			square += (double)(auptr[i] * auptr[i]);
+		}
+
+		rms = sqrt(square / (double)(*read_samples));
+		rms = (rms > 0.5) ? rms : 0.5;
+		pthread_mutex_lock(&thread_monitor_audio_mutex);
+		thread_monitor_audio_volume += (int32_t)(20 * log10(rms / 32768.0));
+		thread_monitor_audio_count += (int32_t)1;
+		pthread_mutex_unlock(&thread_monitor_audio_mutex);
 	}
 
-	rms = sqrt(square / (double)(*read_samples));
-	rms = (rms > 0.5) ? rms : 0.5;
-	pthread_mutex_lock(&thread_monitor_audio_mutex);
-	thread_monitor_audio_volume += (int32_t)(20 * log10(rms / 32768.0));
-	thread_monitor_audio_count += (int32_t)1;
-	pthread_mutex_unlock(&thread_monitor_audio_mutex);
 	return;
 }
 
 extern void thread_monitor_codec_encode(int32_t *packet_payloads) {
-	pthread_mutex_lock(&thread_monitor_codec_mutex);
-	thread_monitor_codec_bitrate += *packet_payloads * 8;
-	thread_monitor_codec_count += 1;
-	pthread_mutex_unlock(&thread_monitor_codec_mutex);
+	if (thread_monitor_run) {
+		pthread_mutex_lock(&thread_monitor_codec_mutex);
+		thread_monitor_codec_bitrate += *packet_payloads * 8;
+		thread_monitor_codec_count += 1;
+		pthread_mutex_unlock(&thread_monitor_codec_mutex);
+	}
+
 	return;
 }
 
 extern void thread_monitor_stream_consume(int32_t *packet_payloads) {
-	pthread_mutex_lock(&thread_monitor_stream_mutex);
-	thread_monitor_stream_bitrate += *packet_payloads * 8;
-	thread_monitor_stream_count += 1;
-	pthread_mutex_unlock(&thread_monitor_stream_mutex);
+	if (thread_monitor_run) {
+		pthread_mutex_lock(&thread_monitor_stream_mutex);
+		thread_monitor_stream_bitrate += *packet_payloads * 8;
+		thread_monitor_stream_count += 1;
+		pthread_mutex_unlock(&thread_monitor_stream_mutex);
+	}
+
 	return;
 }
 

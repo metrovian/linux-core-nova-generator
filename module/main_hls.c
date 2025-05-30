@@ -38,6 +38,7 @@ int32_t main(int32_t argc, char *argv[]) {
 	thread_monitor_resource_ramdisk(path_hls);
 	thread_monitor_zookeeper_gateway(path_zk);
 	thread_monitor_kafka_gateway(path_kf);
+	usleep(AUD_BUFFER_TIMES);
 	thread_monitor_start();
 	pthread_join(pthread_producer, NULL);
 	pthread_join(pthread_consumer, NULL);
