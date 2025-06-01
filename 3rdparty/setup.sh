@@ -1,0 +1,11 @@
+#!/bin/bash
+
+sudo apt update
+sudo apt install \
+        libasound2-dev \
+        libcurl4-openssl-dev \
+        libfdk-aac-dev \
+        libmicrohttpd-dev \
+        libopus-dev \
+        librdkafka-dev \
+        libzookeeper-mt-dev \
