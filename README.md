@@ -11,7 +11,7 @@ Personal application software to understand audio streaming in depth.
 - Hypertext protocol dynamic adaptive stream ( DASH + AAC )
 <br/></br>
 ## Hardwares ##
-- Asus ROG Flow X13 ( Ubuntu Server 24.04 ) ```streamer-manager```
+- Asus ROG Flow X13 ```streamer-manager```
 - Audient EVO 4 ```audio-interface```
 - Kurzweil Piano M115 ```audio-instrument```
 - Raspberry Pi 5 Model B 8GB ( Raspios Lite 24.10 ) ```streamer-module```
