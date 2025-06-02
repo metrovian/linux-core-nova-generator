@@ -12,11 +12,11 @@
 #include <curl/urlapi.h>
 
 typedef enum {
-	GATEWAY_ROUNDROBIN = 0,
-	GATEWAY_LEASTCPU = 1,
-	GATEWAY_LEASTNETWORK = 2,
-} thread_gateway_rule;
+	MANAGER_ROUNDROBIN = 0,
+	MANAGER_LEASTCPU = 1,
+	MANAGER_LEASTNETWORK = 2,
+} thread_manager_rule;
 
-extern void thread_gateway_start();
-extern void thread_gateway_stop();
-extern void thread_gateway_set_rule(thread_gateway_rule rule);
+extern void thread_manager_start();
+extern void thread_manager_stop();
+extern void thread_manager_set_rule(thread_manager_rule rule);

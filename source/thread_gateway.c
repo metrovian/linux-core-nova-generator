@@ -1,4 +1,4 @@
-#include "thread_gateway.h"
+#include "thread_manager.h"
 #include "wrapper_spdlog.h"
 #include "predefined.h"
 #include "preshared.h"
@@ -26,47 +26,47 @@ extern int32_t zoo_wget(
     int *buffer_len,
     struct Stat *stat);
 
-static struct MHD_Daemon *thread_gateway = NULL;
-static struct zhandle_t *thread_gateway_zookeeper = NULL;
-static struct rd_kafka_t *thread_gateway_kafka = NULL;
-static struct String_vector thread_gateway_zookeeper_modules;
-static thread_gateway_rule thread_gateway_zookeeper_rule = GATEWAY_ROUNDROBIN;
-static thread_gateway_data thread_gateway_zookeeper_data[32];
-static int32_t thread_gateway_round_robin = 0;
-static int32_t thread_gateway_least_user = 0;
-static int32_t thread_gateway_least_cpu = 0;
-static int32_t thread_gateway_least_network = 0;
+static struct MHD_Daemon *thread_manager = NULL;
+static struct zhandle_t *thread_manager_zookeeper = NULL;
+static struct rd_kafka_t *thread_manager_kafka = NULL;
+static struct String_vector thread_manager_zookeeper_modules;
+static thread_manager_rule thread_manager_zookeeper_rule = MANAGER_ROUNDROBIN;
+static thread_manager_data thread_manager_zookeeper_data[32];
+static int32_t thread_manager_round_robin = 0;
+static int32_t thread_manager_least_user = 0;
+static int32_t thread_manager_least_cpu = 0;
+static int32_t thread_manager_least_network = 0;
 
-static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, int32_t state, const char *path, void *watcher) {
+static void thread_manager_zookeeper_watcher(zhandle_t *handle, int32_t type, int32_t state, const char *path, void *watcher) {
 	if (state == ZOO_CONNECTED_STATE) {
 		static int modules_now = 0;
 		static int modules_prev = 0;
-		static int module_size = sizeof(thread_gateway_data);
+		static int module_size = sizeof(thread_manager_data);
 		static char module_name[256];
 		if (type == ZOO_CHILD_EVENT) {
 			zoo_get_children(
 			    handle,
 			    path,
 			    1,
-			    &thread_gateway_zookeeper_modules);
+			    &thread_manager_zookeeper_modules);
 
-			if (thread_gateway_zookeeper_modules.count != modules_now) {
+			if (thread_manager_zookeeper_modules.count != modules_now) {
 				modules_prev = modules_now;
-				modules_now = thread_gateway_zookeeper_modules.count;
+				modules_now = thread_manager_zookeeper_modules.count;
 				for (int32_t i = 0; i < modules_now; ++i) {
 					snprintf(
 					    module_name,
 					    sizeof(module_name),
 					    "%s/%s",
 					    NET_ZOOKEEPER_NODE,
-					    thread_gateway_zookeeper_modules.data[i]);
+					    thread_manager_zookeeper_modules.data[i]);
 
 					zoo_wget(
 					    handle,
 					    module_name,
-					    thread_gateway_zookeeper_watcher,
+					    thread_manager_zookeeper_watcher,
 					    NULL,
-					    (char *)(&thread_gateway_zookeeper_data[i]),
+					    (char *)(&thread_manager_zookeeper_data[i]),
 					    &module_size,
 					    NULL);
 				}
@@ -85,9 +85,9 @@ static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, in
 			int32_t event_index = 0;
 			for (event_index = 0; event_index < modules_now; ++event_index) {
 				if (strncmp(
-					thread_gateway_zookeeper_data[event_index].name,
+					thread_manager_zookeeper_data[event_index].name,
 					path,
-					sizeof(thread_gateway_zookeeper_data[event_index].name)) == 0) {
+					sizeof(thread_manager_zookeeper_data[event_index].name)) == 0) {
 					break;
 				}
 			}
@@ -95,9 +95,9 @@ static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, in
 			zoo_wget(
 			    handle,
 			    path,
-			    thread_gateway_zookeeper_watcher,
+			    thread_manager_zookeeper_watcher,
 			    NULL,
-			    (char *)(&thread_gateway_zookeeper_data[event_index]),
+			    (char *)(&thread_manager_zookeeper_data[event_index]),
 			    &module_size,
 			    NULL);
 
@@ -124,29 +124,29 @@ static void thread_gateway_zookeeper_watcher(zhandle_t *handle, int32_t type, in
 	return;
 }
 
-static int8_t thread_gateway_zookeeper_connect() {
+static int8_t thread_manager_zookeeper_connect() {
 	zoo_set_debug_level(ZOO_LOG_LEVEL_ERROR);
-	thread_gateway_zookeeper =
+	thread_manager_zookeeper =
 	    zookeeper_init(
 		NET_ZOOKEEPER_LOCAL,
-		thread_gateway_zookeeper_watcher,
+		thread_manager_zookeeper_watcher,
 		NET_ZOOKEEPER_TIMEOUT,
 		NULL,
 		NULL,
 		0);
 
-	if (!thread_gateway_zookeeper) {
+	if (!thread_manager_zookeeper) {
 		log_error("failed to connect zookeeper service");
 		return -1;
 	}
 
-	zoo_get_children(thread_gateway_zookeeper, NET_ZOOKEEPER_NODE, 1, NULL);
+	zoo_get_children(thread_manager_zookeeper, NET_ZOOKEEPER_NODE, 1, NULL);
 	log_info("zookeeper service started");
 	return 0;
 }
 
-static char *thread_gateway_zookeeper_balance() {
-	if (thread_gateway_zookeeper_modules.count < 0) {
+static char *thread_manager_zookeeper_balance() {
+	if (thread_manager_zookeeper_modules.count < 0) {
 		log_error("failed to get proper module");
 		return "";
 	}
@@ -155,36 +155,36 @@ static char *thread_gateway_zookeeper_balance() {
 	int32_t user = INT32_MAX;
 	int32_t cpu = INT32_MAX;
 	int32_t network = INT32_MAX;
-	for (int32_t i = 0; i < thread_gateway_zookeeper_modules.count; ++i) {
-		if (user > thread_gateway_zookeeper_data[i].user) {
-			user = thread_gateway_zookeeper_data[i].user;
-			thread_gateway_least_user = i;
+	for (int32_t i = 0; i < thread_manager_zookeeper_modules.count; ++i) {
+		if (user > thread_manager_zookeeper_data[i].user) {
+			user = thread_manager_zookeeper_data[i].user;
+			thread_manager_least_user = i;
 		}
 
-		if (cpu > thread_gateway_zookeeper_data[i].cpu) {
-			cpu = thread_gateway_zookeeper_data[i].cpu;
-			thread_gateway_least_cpu = i;
+		if (cpu > thread_manager_zookeeper_data[i].cpu) {
+			cpu = thread_manager_zookeeper_data[i].cpu;
+			thread_manager_least_cpu = i;
 		}
 
-		if (network > thread_gateway_zookeeper_data[i].network) {
-			network = thread_gateway_zookeeper_data[i].network;
-			thread_gateway_least_network = i;
+		if (network > thread_manager_zookeeper_data[i].network) {
+			network = thread_manager_zookeeper_data[i].network;
+			thread_manager_least_network = i;
 		}
 	}
 
-	switch (thread_gateway_zookeeper_rule) {
-	case GATEWAY_ROUNDROBIN: {
-		balance = thread_gateway_round_robin++ % thread_gateway_zookeeper_modules.count;
+	switch (thread_manager_zookeeper_rule) {
+	case MANAGER_ROUNDROBIN: {
+		balance = thread_manager_round_robin++ % thread_manager_zookeeper_modules.count;
 		break;
 	}
 
-	case GATEWAY_LEASTCPU: {
-		balance = thread_gateway_least_cpu;
+	case MANAGER_LEASTCPU: {
+		balance = thread_manager_least_cpu;
 		break;
 	}
 
-	case GATEWAY_LEASTNETWORK: {
-		balance = thread_gateway_least_network;
+	case MANAGER_LEASTNETWORK: {
+		balance = thread_manager_least_network;
 		break;
 	}
 
@@ -194,10 +194,10 @@ static char *thread_gateway_zookeeper_balance() {
 	}
 	}
 
-	return thread_gateway_zookeeper_data[balance].url;
+	return thread_manager_zookeeper_data[balance].url;
 }
 
-static int8_t thread_gateway_kafka_connect() {
+static int8_t thread_manager_kafka_connect() {
 	rd_kafka_conf_t *kafka_conf = rd_kafka_conf_new();
 	rd_kafka_topic_partition_list_t *kafka_topics = rd_kafka_topic_partition_list_new(1);
 	char kafka_error[512];
@@ -223,34 +223,34 @@ static int8_t thread_gateway_kafka_connect() {
 	    kafka_error,
 	    sizeof(kafka_error));
 
-	thread_gateway_kafka = rd_kafka_new(
+	thread_manager_kafka = rd_kafka_new(
 	    RD_KAFKA_CONSUMER,
 	    kafka_conf,
 	    kafka_error,
 	    sizeof(kafka_error));
 
-	if (!thread_gateway_kafka) {
+	if (!thread_manager_kafka) {
 		log_error("failed to create kafka consumer");
 		return -1;
 	}
 
 	struct rd_kafka_metadata *kafka_metadata = NULL;
-	rd_kafka_resp_err_t kafka_connect = rd_kafka_metadata(thread_gateway_kafka, 0, NULL, &kafka_metadata, NET_KAFKA_TIMEOUT);
+	rd_kafka_resp_err_t kafka_connect = rd_kafka_metadata(thread_manager_kafka, 0, NULL, &kafka_metadata, NET_KAFKA_TIMEOUT);
 	if (kafka_connect != RD_KAFKA_RESP_ERR_NO_ERROR) {
-		rd_kafka_destroy(thread_gateway_kafka);
-		thread_gateway_kafka = NULL;
+		rd_kafka_destroy(thread_manager_kafka);
+		thread_manager_kafka = NULL;
 		log_error("failed to connect kafka consumer");
 		return -1;
 	}
 
-	rd_kafka_poll_set_consumer(thread_gateway_kafka);
+	rd_kafka_poll_set_consumer(thread_manager_kafka);
 	rd_kafka_topic_partition_list_add(kafka_topics, NET_KAFKA_TOPIC, -1);
-	rd_kafka_subscribe(thread_gateway_kafka, kafka_topics);
+	rd_kafka_subscribe(thread_manager_kafka, kafka_topics);
 	log_info("kafka service started");
 	return 0;
 }
 
-static int32_t thread_gateway_request_handler(
+static int32_t thread_manager_request_handler(
     void *cls,
     struct MHD_Connection *connection,
     const char *url,
@@ -263,14 +263,14 @@ static int32_t thread_gateway_request_handler(
 		return MHD_NO;
 	}
 
-	struct MHD_Response *response = MHD_create_response_from_buffer(0, "", NET_GATEWAY_RESPONSE);
+	struct MHD_Response *response = MHD_create_response_from_buffer(0, "", NET_MANAGER_RESPONSE);
 	if (!response) {
 		return MHD_NO;
 	}
 
 	static int ret = -1;
 	static char *redirect = NULL;
-	redirect = thread_gateway_zookeeper_balance();
+	redirect = thread_manager_zookeeper_balance();
 	if (strlen(redirect) > 0) {
 		MHD_add_response_header(response, "Location", redirect);
 		ret = MHD_queue_response(connection, MHD_HTTP_FOUND, response);
@@ -280,40 +280,40 @@ static int32_t thread_gateway_request_handler(
 	return ret;
 }
 
-extern void thread_gateway_start() {
-	thread_gateway =
+extern void thread_manager_start() {
+	thread_manager =
 	    MHD_start_daemon(
-		NET_GATEWAY_MODE,
-		NET_GATEWAY_PORT,
+		NET_MANAGER_MODE,
+		NET_MANAGER_PORT,
 		NULL,
 		NULL,
-		&thread_gateway_request_handler,
+		&thread_manager_request_handler,
 		NULL,
 		MHD_OPTION_END);
 
-	if (thread_gateway) {
+	if (thread_manager) {
 		log_info("redirect service started");
 	} else {
 
-		log_error("failed to start gateway thread");
+		log_error("failed to start manager thread");
 		return;
 	}
 
-	if (thread_gateway_zookeeper_connect() < 0) {
-		thread_gateway_stop();
-		log_error("failed to start gateway thread");
+	if (thread_manager_zookeeper_connect() < 0) {
+		thread_manager_stop();
+		log_error("failed to start manager thread");
 		return;
 	}
 
-	if (thread_gateway_kafka_connect() < 0) {
-		thread_gateway_stop();
-		log_error("failed to start gateway thread");
+	if (thread_manager_kafka_connect() < 0) {
+		thread_manager_stop();
+		log_error("failed to start manager thread");
 		return;
 	}
 
-	log_info("gateway thread started");
-	while (thread_gateway_kafka) {
-		rd_kafka_message_t *kafka_message = rd_kafka_consumer_poll(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
+	log_info("manager thread started");
+	while (thread_manager_kafka) {
+		rd_kafka_message_t *kafka_message = rd_kafka_consumer_poll(thread_manager_kafka, NET_KAFKA_TIMEOUT);
 		if (kafka_message) {
 			if (kafka_message->err) {
 				rd_kafka_message_destroy(kafka_message);
@@ -334,38 +334,38 @@ extern void thread_gateway_start() {
 		}
 	}
 
-	log_info("gateway thread terminated");
+	log_info("manager thread terminated");
 	return;
 }
 
-extern void thread_gateway_stop() {
-	if (thread_gateway_zookeeper) {
-		zookeeper_close(thread_gateway_zookeeper);
-		thread_gateway_zookeeper = NULL;
+extern void thread_manager_stop() {
+	if (thread_manager_zookeeper) {
+		zookeeper_close(thread_manager_zookeeper);
+		thread_manager_zookeeper = NULL;
 		log_info("zookeeper service terminated");
 	}
 
-	if (thread_gateway_kafka) {
-		rd_kafka_flush(thread_gateway_kafka, NET_KAFKA_TIMEOUT);
-		rd_kafka_destroy(thread_gateway_kafka);
-		thread_gateway_kafka = NULL;
+	if (thread_manager_kafka) {
+		rd_kafka_flush(thread_manager_kafka, NET_KAFKA_TIMEOUT);
+		rd_kafka_destroy(thread_manager_kafka);
+		thread_manager_kafka = NULL;
 		log_info("kafka service terminated");
 	}
 
-	if (thread_gateway) {
-		MHD_stop_daemon(thread_gateway);
-		thread_gateway = NULL;
+	if (thread_manager) {
+		MHD_stop_daemon(thread_manager);
+		thread_manager = NULL;
 		log_info("redirect service terminated");
 	}
 
 	return;
 }
 
-extern void thread_gateway_set_rule(thread_gateway_rule rule) {
+extern void thread_manager_set_rule(thread_manager_rule rule) {
 	static char notice[256];
 	switch (rule) {
-	case GATEWAY_ROUNDROBIN: {
-		thread_gateway_zookeeper_rule = GATEWAY_ROUNDROBIN;
+	case MANAGER_ROUNDROBIN: {
+		thread_manager_zookeeper_rule = MANAGER_ROUNDROBIN;
 		snprintf(
 		    notice,
 		    sizeof(notice),
@@ -374,8 +374,8 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule) {
 		break;
 	}
 
-	case GATEWAY_LEASTCPU: {
-		thread_gateway_zookeeper_rule = GATEWAY_LEASTCPU;
+	case MANAGER_LEASTCPU: {
+		thread_manager_zookeeper_rule = MANAGER_LEASTCPU;
 		snprintf(
 		    notice,
 		    sizeof(notice),
@@ -384,8 +384,8 @@ extern void thread_gateway_set_rule(thread_gateway_rule rule) {
 		break;
 	}
 
-	case GATEWAY_LEASTNETWORK: {
-		thread_gateway_zookeeper_rule = GATEWAY_LEASTNETWORK;
+	case MANAGER_LEASTNETWORK: {
+		thread_manager_zookeeper_rule = MANAGER_LEASTNETWORK;
 		snprintf(
 		    notice,
 		    sizeof(notice),

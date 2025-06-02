@@ -132,12 +132,12 @@ extern void thread_monitor_resource_ramdisk(const char *path) {
 	return;
 }
 
-extern void thread_monitor_zookeeper_gateway(const char *path) {
+extern void thread_monitor_zookeeper_manager(const char *path) {
 	strncpy(thread_monitor_zookeeper_path, path, sizeof(thread_monitor_zookeeper_path));
 	return;
 }
 
-extern void thread_monitor_kafka_gateway(const char *path) {
+extern void thread_monitor_kafka_manager(const char *path) {
 	strncpy(thread_monitor_kafka_path, path, sizeof(thread_monitor_kafka_path));
 	return;
 }

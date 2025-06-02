@@ -17,8 +17,8 @@ extern void thread_monitor_codec_encode(int32_t *packet_payloads);
 extern void thread_monitor_stream_consume(int32_t *packet_payloads);
 
 extern void thread_monitor_resource_ramdisk(const char *path);
-extern void thread_monitor_zookeeper_gateway(const char *path);
-extern void thread_monitor_kafka_gateway(const char *path);
+extern void thread_monitor_zookeeper_manager(const char *path);
+extern void thread_monitor_kafka_manager(const char *path);
 
 extern void thread_monitor_start();
 extern void thread_monitor_stop();
