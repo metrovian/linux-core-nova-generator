@@ -2,19 +2,19 @@
 Personal application software to understand audio streaming in depth.
 <br/></br>
 ## Features ##
+### Streamer Manager ###
+- Streamer coordination ( ZOOKEEPER )
+- Streamer performance metric collection ( KAFKA + PROMETHEUS )
 ### Streamer Module ###
 - Janus web real-time communication ( WebRTC + OPUS )
 - Hypertext protocol live stream ( HLS + AAC )
 - Hypertext protocol dynamic adaptive stream ( DASH + AAC )
-### Streamer Gateway ###
-- Streamer coordination ( ZOOKEEPER )
-- Streamer performance metric collection ( KAFKA + PROMETHEUS )
 <br/></br>
 ## Hardwares ##
-- Raspberry Pi 5 Model B 8GB ( Raspios Lite 24.10 ) ```streamer-module```
-- Kurzweil Piano M115 ```audio-instrument```
+- Asus ROG Flow X13 ( Ubuntu Server 24.04 ) ```streamer-manager```
 - Audient EVO 4 ```audio-interface```
-- Asus ROG Flow X13 ( Ubuntu Server 24.04 ) ```streamer-gateway```
+- Kurzweil Piano M115 ```audio-instrument```
+- Raspberry Pi 5 Model B 8GB ( Raspios Lite 24.10 ) ```streamer-module```
 
 <br/></br>
 Copyright (c) 2025 metrovian [ MIT LICENSE ]
