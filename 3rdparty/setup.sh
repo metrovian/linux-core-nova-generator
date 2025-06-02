@@ -10,4 +10,5 @@ sudo apt install \
         libmicrohttpd-dev \
         libopus-dev \
         librdkafka-dev \
+        libspdlog-dev \
         libzookeeper-mt-dev \
