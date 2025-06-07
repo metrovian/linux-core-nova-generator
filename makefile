@@ -1,5 +1,3 @@
-NAME := NovaGenerator
-
 CC := gcc
 CFLAGS := -Iinclude -Wall -Wno-pointer-sign -Wno-incompatible-pointer-types
 LDFLAGS := -lasound -lfdk-aac -lopus -lcurl -lmicrohttpd -lrdkafka -lzookeeper_mt -lspdlog -lfmt -lm -pthread
@@ -39,4 +37,4 @@ list:
 
 clean:
 	@rm -fv $(WRAPPER_OBJS) $(COMMON_OBJS) $(MODULE_OBJS)
-	@rm -fv $(NAME)
+	@rm -fv bin/*
