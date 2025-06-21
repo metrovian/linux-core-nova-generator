@@ -3,8 +3,8 @@ Personal application software to understand audio streaming in depth.
 <br/></br>
 ## Features ##
 ### Streamer Manager ###
-- Streamer coordination ( ZOOKEEPER )
-- Streamer performance metric collection ( KAFKA + PROMETHEUS )
+- Streamer coordination
+- Streamer performance metric collection
 ### Streamer Module ###
 - Janus web real-time communication ( WebRTC + OPUS )
 - Hypertext protocol live stream ( HLS + AAC )
