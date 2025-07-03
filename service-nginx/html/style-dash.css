@@ -1,0 +1,26 @@
+body {
+        font-family: sans-serif;
+        text-align: center;
+        padding: 2em;
+        background: #f9f9f9;
+        margin: 0;
+}
+.audio-container {
+        max-width: 500px;
+        margin: 2em auto;
+        overflow: hidden;
+}
+.audio-player {
+        width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+        body {
+                background: #121212;
+                color: #f0f0f0;
+        }
+        .audio-player {
+                background-color: #1e1e1e;
+                color: #ffffff;
+        }
+}
