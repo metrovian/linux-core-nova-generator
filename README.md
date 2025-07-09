@@ -1,6 +1,3 @@
-# Stream Generator #
-Personal application software to understand audio streaming in depth.
-<br/></br>
 ## Features ##
 ### Streamer Manager ###
 - Streamer coordination
