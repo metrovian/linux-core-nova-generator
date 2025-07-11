@@ -6,6 +6,7 @@ sudo apt install ifstat ffmpeg
 sudo apt install \
         libasound2-dev \
         libcurl4-openssl-dev \
+        libcxxopts-dev \
         libfdk-aac-dev \
         libmicrohttpd-dev \
         libopus-dev \
