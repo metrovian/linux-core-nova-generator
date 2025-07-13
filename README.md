@@ -13,5 +13,5 @@
 - Kurzweil Piano M115 ```audio-instrument```
 - Raspberry Pi 5 Model B 8GB ( Raspios Lite 24.10 ) ```streamer-module```
 
-<br/></br> 
+<br/></br>
 Copyright (c) 2025 metrovian [ MIT LICENSE ]
